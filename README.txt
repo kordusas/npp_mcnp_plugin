@@ -1,0 +1,1 @@
+Rewritting the code using different approach
