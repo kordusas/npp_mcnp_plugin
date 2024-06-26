@@ -1,11 +1,7 @@
 # Model-View-Presenter approach ?
+from _common import ViewOfLine
+          
 
-class ViewOfLine():
-    """
-    This class is used to interact with the current line of the text editor. creates model representation of the line.
-    """
-    pass
-    
 class ModelMcnpInput():
     """
     This is a class reperesenting the MCNP input file we are editing. 
