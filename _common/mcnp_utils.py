@@ -46,7 +46,21 @@ class ModelMcnpInput(object):
         """Adds physics settings to the model."""
         if physics is not None:
             self.physics.extend(physics if isinstance(physics, list) else [physics])
-    
+    @classmethod
+    def from_file_parser(cls, file_parser):
+        """
+        Class method to initialize the ModelMcnpInput instance from a file parser object.
+
+        :param file_parser: An object capable of parsing MCNP input files and extracting components.
+        :return: An instance of ModelMcnpInput initialized with the components extracted by the file_parser.
+        """
+        surfaces = file_parser.get_surfaces()
+        cells = file_parser.get_cells()
+        materials = file_parser.get_materials()
+        tallies = file_parser.get_tallies()
+        physics = file_parser.get_physics()
+        return cls(surfaces, cells, materials, tallies, physics)
+
     def get_surface(self, surface_number):
         """
         This function returns the surface with the given number.
