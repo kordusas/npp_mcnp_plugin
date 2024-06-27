@@ -153,7 +153,15 @@ class FileParser():
         This function returns the physics from the parsed file.
         """
         pass
-    def parse_file(self):
-        """ 
-        This function parses the file.
+    @classmethod
+    def from_file(cls, file_path):
         """
+        Class method to create an instance of FileParser from a file path.
+        """
+        instance = cls()
+        # Implement file reading and parsing logic here
+        # For example:
+        # with open(file_path, 'r') as file:
+        #     data = file.read()
+        #     # Parse data and populate the instance attributes
+        return instance
