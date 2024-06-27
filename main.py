@@ -91,21 +91,16 @@ class PhysicsBlockPresenter(AbstractBlockSelectionPresenter):
 
 class editorHandler:
     def __init__(self, notifier, debug=True):
-        self.parsed_file = FileParser()
-        self.parsed_file.parse_file()
         self.notifier = notifier
-        self.mcnp_input = self._initialize_mcnp_input_instance()
-        self.parsed_file.create_mcnp_input()
-        
         self.debug = debug
+        
+        # initialisng parser instance from file cls method 
+        self.parsed_file = FileParser.from_file(editor.getCurrentFilename())
 
-    def _initialize_mcnp_input_instance(self):
-        surfaces = self.parsed_file.get_surfaces()
-        cells = self.parsed_file.get_cells()
-        materials = self.parsed_file.get_materials()
-        tallies = self.parsed_file.get_tallies()
-        physics = self.parsed_file.get_physics()
-        return ModelMcnpInput(surfaces, cells, materials, tallies, physics)
+        # Now, initialize ModelMcnpInput using the class method from_file_parser:
+        mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
+        
+        
 
     def register_callbacks(self):
         editor.clearCallbacks([SCINTILLANOTIFICATION.UPDATEUI])
