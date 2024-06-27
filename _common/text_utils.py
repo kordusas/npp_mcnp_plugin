@@ -1,4 +1,4 @@
-from NPP import editor
+from Npp import editor
 import re
 class ViewOfLine():
     """
@@ -118,3 +118,42 @@ class ViewOfLine():
             line_offset += 1
 
         return ''.join(full_line_parts)
+    
+
+
+class FileParser():
+    """
+    This class parses the file and creates mcnp_input object.
+    """
+    def __init__(self):
+            pass
+    
+    def get_surfaces(self):
+        """
+        This function returns the surfaces from the parsed file.
+        """
+        pass
+    def get_cells(self):
+        """
+        This function returns the cells from the parsed file.
+        """
+        pass    
+    def get_materials(self):
+        """
+        This function returns the materials from the parsed file.
+        """
+        pass
+    def get_tallies(self):
+        """
+        This function returns the tallies from the parsed file.
+        """
+        pass
+    def get_physics(self):
+        """
+        This function returns the physics from the parsed file.
+        """
+        pass
+    def parse_file(self):
+        """ 
+        This function parses the file.
+        """
