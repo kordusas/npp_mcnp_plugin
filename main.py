@@ -1,129 +1,13 @@
 # Model-View-Presenter approach ?
-from _common import ViewOfLine
-          
-
-class ModelMcnpInput():
-    """
-    This is a class reperesenting the MCNP input file we are editing. 
-    It enables us to obtain input properties withouth the need to keep parsing the file repeatedly.
-    Has indexed input properties for easy access
+from _common.text_utils import ViewOfLine, FileParser
+from _common.notification_utils import SelectionNotification
+from _common.mcnp_utils  import ModelMcnpInput   
+from Npp import editor, SCINTILLANOTIFICATION
     
-    """
-    def  __init__(self):
-        pass
-    
-    def get_surface(self, surface_number):
-        """
-        This function returns the surface with the given number.
-        """
-        pass
-    def get_cell(self, cell_number):
-        """
-        This function returns the cell with the given number.
-        """
-        pass
-    def get_material(self, material_number):
-        """ 
-        This function returns the material with the given number.
-        """
-        pass
-    def get_tally(self, tally_number):
-        """
-        This function returns the tally with the given number.
-        """
-        pass
-        
-    def is_line_in_surface_block(self, line_number):
-        """
-        This function returns True if the line number is in a surface block.
-        """ 
-        pass    
-    def is_line_in_cell_block(self, line_number):
-        """
-        This function returns True if the line number is in a cell block.
-        """ 
-        pass
-    def is_line_in_physics_block(self, line_number):
-        """
-        This function returns True if the line number is in a physics block.
-        """ 
-        pass
-
-    def return_block_type(self, line_number):
-        """
-        This function returns the type of block the line is in.
-        """
-        if self.is_line_in_surface_block(line_number):
-            return "surface"
-        elif self.is_line_in_cell_block(line_number):
-            return "cell"
-        elif self.is_line_in_physics_block(line_number):
-            return "physics"
-        else:
-            return None 
 
 
 
-    
-class file_parser():
-    """
-    This class parses the file and creates mcnp_input object.
-    """
-    def __init__(self):
-            pass
-    
-    def create_mcnp_input(self):
-        """
-        This function creates the mcnp_input object. from the parsed file blocks.
-        """
-        mcnp_input = ModelMcnpInput()
-        return mcnp_input
-        
-    
-class selection_notifications():
-    """
-    This class is used to pop notifications when a block of text is selected.
-    Implements Singleton pattern to ensure only one instance is used throughout the application.
-    """
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(selection_notifications, cls).__new__(cls)
-            # Put any initialization here.
-        return cls._instance
-
-    def __init__(self):
-        pass
-
-    def notify_surface_block_selected(self, message):
-        """
-        This function notifies the user what in a surface block has been selected.
-        """
-        pass
-
-    def notify_cell_block_selected(self, message):
-        """
-        This function notifies the user what in a cell block has been selected.
-        """
-        pass
-
-    def notify_physics_block_selected(self, message):
-        """
-        This function notifies the user what in a physics block has been selected.
-        """
-        pass
-
-    def notify_no_block_selected(self):
-        """
-        This function notifies the user that no block has been selected.
-        """
-        pass
-
-            
-
-
-def BlockPreseterFactory(self, block_type, mcnp_input,  view_of_current_line, notifier):
+def BlockPreseterFactory(self, block_type,  view_of_current_line, mcnp_input, notifier):
     """
     This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
     """
@@ -207,13 +91,22 @@ class PhysicsBlockPresenter(AbstractBlockSelectionPresenter):
 
 class editorHandler:
     def __init__(self, notifier, debug=True):
-        self.parsed_file = file_parser()
+        self.parsed_file = FileParser()
         self.parsed_file.parse_file()
         self.notifier = notifier
-        self.mcnp_input = self.parsed_file.create_mcnp_input()
+        self.mcnp_input = self._initialize_mcnp_input_instance()
+        self.parsed_file.create_mcnp_input()
         
         self.debug = debug
-    
+
+    def _initialize_mcnp_input_instance(self):
+        surfaces = self.parsed_file.get_surfaces()
+        cells = self.parsed_file.get_cells()
+        materials = self.parsed_file.get_materials()
+        tallies = self.parsed_file.get_tallies()
+        physics = self.parsed_file.get_physics()
+        return ModelMcnpInput(surfaces, cells, materials, tallies, physics)
+
     def register_callbacks(self):
         editor.clearCallbacks([SCINTILLANOTIFICATION.UPDATEUI])
         editor.callbackSync(self.on_select, [SCINTILLANOTIFICATION.UPDATEUI])
@@ -239,6 +132,6 @@ class editorHandler:
         
             
 if __name__ == "__main__":
-    handler = editorHandler(selection_notifications())
+    handler = editorHandler(SelectionNotification())
     handler.register_callbacks()
     
