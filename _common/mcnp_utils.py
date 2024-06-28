@@ -1,4 +1,4 @@
-
+# from text_utils import FileParser
 
 class Surface(object):
     ALLOWED_SURFACE_TYPES = ['box', 'rpp', 'sph', 'rcc', 'rhp', 'rec', 'trc', 'ell', 'wed', 'arb', 'px', 'py', 'pz', 'so', 's', 'sx', 'sy', 'sz', 'c/x', 'c/y', 'c/z', 'cx', 'cy', 'cz', 'k/x', 'k/y', 'k/z', 'kx', 'ky', 'kz', 'sq', 'gq', 'tx', 'ty', 'tz', 'x', 'y', 'z', 'p']
@@ -47,6 +47,9 @@ class Isotope(object):
 
 
 class Material(object):
+    """
+    later need to fix the part where both density and atomic density can be present. this cannot be the case.
+    """    
     natural_abundances = {
         6: [(6012, 0.9893), (6013, 0.0107)],
         92: [(92235, 0.007), (92238, 0.993)],
@@ -55,10 +58,18 @@ class Material(object):
     def __init__(self, name, material_id=None):
         self.name = name
         self.material_id = material_id
+        self.density = None
+        self.atomic_density = None
         self.isotopes = []
     def __str__(self):
         return "Material %s: %s" % (self.name, ', '.join([isotope.name for isotope in self.isotopes]))
-    
+    def print_output(self):
+
+        if self.density is not None:
+            return "%s: %s" % (self.material_id, -self.density)
+        else:
+            return "%s: %s" % (self.material_id, self.atomic_density)
+        return
     def add_isotope(self, isotope):
         self.isotopes.append(isotope)
 
@@ -98,15 +109,34 @@ class Cell(object):
     surfaces is a list of surface ids
     cells is a list of cell ids i need to exclude using #
     importance is a dict of particle type as str and importance value in float
+    Note:
+    Technically i could have the Cell as a dict object itself i think without issues.
+    But it would be useful to have methods like print cell which would write the cell in the correct format. - could be cell handler 
+    but i think Cell add could be very clear, then i can just sum the cells. very easy logic. 
+    Maybe I could also do the same for surfaces cell.add_cell(to make union of the cells)
+    cell_exclude_cell(could make expansion of the exclusion)
+       union could be 
     """
     def __init__(self, cell_id, material_id, surfaces, cells, importance):
+        assert isinstance(cell_id, int), "cell_id must be an int"
+        assert isinstance(material_id, int), "material_id must be an int"
+        assert isinstance(surfaces, list), "surfaces must be a list"
+        assert isinstance(cells, list), "cells must be a list"
+        assert isinstance(importance, dict), "importance must be a dict"
         self.cell_id = cell_id
         self.material_id = material_id
         self.surfaces = surfaces
-        self.cells  = cells
+        self.cells = cells
         self.importance = importance
+
     def __str__(self):
-        return "Cell %s: %s" % (self.cell_id, self.material, self.surfaces, self.cells, self.importance)
+        return "Cell %s: Material ID %s, Surfaces %s, Cells %s, Importance %s" % (self.cell_id, self.material_id, self.surfaces, self.cells, self.importance)
+    def print_output(self):
+        """
+        Alternative printing method for the cell object when writting mcnp_input_file
+        """
+        return "%s: Material ID %s, Surfaces %s, Cells %s, Importance %s" % (self.cell_id, self.print_output, self.surfaces, self.cells, self.importance)
+
     def replace_surface(self, old_surface_id, new_surface):
         """
         looks through the self.surface dictionary and replaces the old surface with the new surface changing the id
@@ -255,7 +285,7 @@ class ModelMcnpInput(object):
             return None 
 
 
-class HandlerMcnpInput:
+class HandlerMcnpInput(object):
     """
     The intention of this class is to modify the ModelMcnpInput object by changing the surfaces and materials in the cells as needed.
     """
@@ -296,7 +326,7 @@ class HandlerMcnpInput:
         self.replace_surface_in_cell_block(old_surface_id, new_surface)
         self.replace_surface_in_surface_block(old_surface_id, new_surface)
     # Placeholder for additional methods
-
+"""
 if  __name__ == "__main__":
         
     # Example for model creation and modification
@@ -317,3 +347,4 @@ if  __name__ == "__main__":
     print("\nAfter modification:")
     for key in model.surfaces:
         print(model.surfaces[key])
+    """
