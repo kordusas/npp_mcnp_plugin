@@ -1,4 +1,6 @@
-from Npp import editor
+from Npp import editor, console
+from mcnp_utils import Surface
+from notification_utils import log_debug
 import re
 class ViewOfLine():
     """
@@ -122,37 +124,176 @@ class ViewOfLine():
 
 
 class FileParser():
-    """
-    This class parses the file and creates mcnp_input object.
-    """
     def __init__(self):
-            pass
-    
-    def get_surfaces(self):
+        self.filename = []
+        self.lines = []
+        self.message_block = []
+        self.cells_block = []
+        self.surfaces_block = []
+        self.physics_block = []
+        self.has_header = False
+        self.block_start_lines = {}
+        self.title  = ""
+
+        self.surfaces = {}
+
+    def find_blocks(self):
         """
-        This function returns the surfaces from the parsed file.
+        Finds and returns the different blocks of data in the file.
+
+        Returns:
+            block_start_lines (dict): The start and end lines of each block.
         """
-        pass
+        console.write("Finding blocks...\n")
+
+        block_start_indices = []
+        # Determine if we have a header block
+        self.has_header = self.lines[0].startswith("message")
+
+        block_start_indices = []
+        for i, line in enumerate(self.lines):
+            if line.strip() == "":
+                block_start_indices.append(i)
+        
+        if self.has_header:
+            self.message_block = self.lines[:block_start_indices[0]]
+            block_start_indices[0] += 1 # adding 1 as this is empty line
+        else:
+            block_start_indices.insert(0, 0)
+        
+        # +2 because first line is always a title
+        self.block_start_lines['cells'] = {'start': block_start_indices[0]+1, 'end': block_start_indices[1]}
+        self.block_start_lines['surfaces'] = {'start': block_start_indices[1], 'end': block_start_indices[2]}
+        self.block_start_lines['physics'] = {'start': block_start_indices[2], 'end': len(self.lines)}
+                
+        return 0
+
+    def parse_blocks(self):
+        """
+        Parses the different blocks of data in the file.
+
+        """
+        self.title = self.lines[self.block_start_lines['cells']['start']-1]
+        self.cells_block = self.lines[self.block_start_lines['cells']['start']:self.block_start_lines['cells']['end']]
+        self.surfaces_block = self.lines[self.block_start_lines['surfaces']['start'] + 1:self.block_start_lines['surfaces']['end']]
+        self.physics_block = self.lines[self.block_start_lines['physics']['start'] + 1:]
+
+        console.write("Cells block: {}\nSurfaces block: {}\nPhysics block: {}\n".format(
+            len(self.cells_block), len(self.surfaces_block), len(self.physics_block)
+        ))
     def get_cells(self):
-        """
-        This function returns the cells from the parsed file.
-        """
-        pass    
+        pass
     def get_materials(self):
-        """
-        This function returns the materials from the parsed file.
-        """
         pass
     def get_tallies(self):
-        """
-        This function returns the tallies from the parsed file.
-        """
         pass
     def get_physics(self):
-        """
-        This function returns the physics from the parsed file.
-        """
         pass
+    def get_surfaces(self):
+        """
+        returns the parsed surface dictionary
+        parsed surfaces indexed by their ID.
+
+        Returns:
+            parsed_surfaces (dict): A dictionary of `Surface` objects representing the parsed surfaces,
+                                    indexed by their surface ID.
+        """
+        parsed_surfaces = {}
+        comment = ""
+        for line in self.surfaces_block:
+            if line.startswith("c"):
+                comment += line
+                continue
+            surface = self.parse_surface(line, comment)
+            parsed_surfaces[int(surface.surface_id)] = surface
+            comment = ""
+        return parsed_surfaces
+    
+    def parse_surface(self, line, comment=""):
+        """
+        Parses a single surface line and returns a `Surface` object.
+
+        Args:
+            line (str): The line to parse.
+            comment (str): The comment associated with the surface.
+
+        Returns:
+            surface (Surface): The parsed `Surface` object.
+        """
+        surface_data = line.split("$")
+        if len(surface_data) >= 2:
+            comment = surface_data[1].strip()
+        
+        surface_data = surface_data[0].split()
+        if len(surface_data) >= 3:
+            surface_id = surface_data[0]
+            if surface_data[1].isdigit():
+                surface_transform = surface_data[1]
+                surface_type = surface_data[2]
+                surface_params = ' '.join(surface_data[3:])
+            else:
+                surface_transform = None
+                surface_type = surface_data[1]
+                surface_params = ' '.join(surface_data[2:])
+            surface = Surface(surface_id, surface_type, surface_params, comment, surface_transform)
+            console.write("Surface parsed: {}\n".format(surface_id))
+        else:
+            console.write("Error parsing surface: {}\n".format(line))
+            surface = None
+        return surface
+    
+    def is_in_cell_block(self, selected_line):
+        """
+        Determines if the specified line is in the cells block.
+
+        Args:
+            line (str): The line to check.
+
+        Returns:
+            bool: True if the line is in the cells block, False otherwise.
+        """
+        if  self.block_start_lines['cells']['start'] <= selected_line <= self.block_start_lines['cells']['end']:
+            is_in_cell_block = True
+        else:
+            is_in_cell_block = False
+        return is_in_cell_block
+    
+    def is_in_surface_block(self, selected_line):
+        """
+        Determines if the specified line is in the surfaces block.
+
+        Args:
+            line (str): The line to check.
+
+        Returns:
+            bool: True if the line is in the surfaces block, False otherwise.
+        """
+        if self.block_start_lines['surfaces']['start'] <= selected_line <= self.block_start_lines['surfaces']['end']:
+            is_in_surface_block = True
+        else:
+            is_in_surface_block = False
+        return is_in_surface_block
+    
+    def is_in_physics_block(self, selected_line):
+        """
+        Determines if the specified line is in the physics block.
+
+        Args:
+            line (str): The line to check.
+
+        Returns:
+            bool: True if the line is in the physics block, False otherwise.
+        """
+        if self.block_start_lines['physics']['start'] <= selected_line <=  self.block_start_lines['physics']['end'] :
+            is_in_physics_block = True
+        else:
+            is_in_physics_block = False
+        return is_in_physics_block
+    
+    def analyse_file(self):
+        self.find_blocks()
+        self.parse_blocks()
+        
     @classmethod
     def from_file(cls, file_path):
         """
@@ -164,4 +305,17 @@ class FileParser():
         # with open(file_path, 'r') as file:
         #     data = file.read()
         #     # Parse data and populate the instance attributes
-        return instance
+        filename = file_path
+        lines = []
+        try:
+            with open(filename, 'r') as file:
+                for i, line in enumerate(file, 1):
+                    lines.append(line.lower())
+        except Exception as e:
+           log_debug(True,"Error reading file: {}\n".format(str(e)) )  
+        
+        log_debug(True,"Parsed {} lines from file: {}\n".format(len(lines), filename) )  
+ 
+        
+
+
