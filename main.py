@@ -1,10 +1,17 @@
 # Model-View-Presenter approach ?
-from _common.text_utils import ViewOfLine, FileParser
+
+from Npp import notepad, editor, console, SCINTILLANOTIFICATION, UPDATE, NOTIFICATION
+import time, sys
+from _common.text_utils import ViewOfLine, FileParser, get_char_from_args
 from _common.notification_utils import SelectionNotification
 from _common.mcnp_utils  import ModelMcnpInput   
-from Npp import editor, SCINTILLANOTIFICATION
+from _common.general_utils import log_debug
+CHAR_PERIOD = "."
+CHAR_SPACE = " "
+CHAR_L = "l"
+CHAR_HASH = "#"
     
-def BlockPreseterFactory(self, block_type,  view_of_current_line, mcnp_input, notifier):
+def BlockPreseterFactory(block_type,  view_of_current_line, mcnp_input, notifier):
     """
     This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
     """
@@ -99,28 +106,46 @@ class editorHandler:
     def register_callbacks(self):
         editor.clearCallbacks([SCINTILLANOTIFICATION.UPDATEUI])
         editor.callbackSync(self.on_select, [SCINTILLANOTIFICATION.UPDATEUI])
+        editor.callbackSync(self.on_character_added, [SCINTILLANOTIFICATION.CHARADDED])
         pass
 
     def _initialise_parser_and_mcnp_input(self):
         """
         parse the file and create the mcnp input instance.
         """
-        self.parsed_file = FileParser.from_file(editor.getCurrentFilename())
+        self.parsed_file = FileParser.from_file(notepad.getCurrentFilename())
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
         
 
-    def on_select(self)
+    def on_select(self, args):
         # getting the current line and the selection in a class
         view_of_current_line = ViewOfLine()
         
         # getting the block type according to which we can select presenter
-        block_type = self.mcnp_input.return_block_type(ViewOfLine.current_line_no)
+        block_type = self.mcnp_input.return_block_type(view_of_current_line.current_line_no)
         
         # block presenter can analysie the 
         block_presenter = BlockPreseterFactory(block_type, self.mcnp_input, view_of_current_line, self.notifier )
         
+    def on_character_added(self, args):
+            char_added = get_char_from_args(args)
+
+            if char_added == CHAR_PERIOD:
+                log_debug(self.debug, "Period character added\n")
+                #handle_period_character()
+            elif char_added != CHAR_SPACE:
+                # 
+                log_debug(self.debug, "None space character added\n")
+                self.handle_non_space_character(char_added)
+    def handle_non_space_character(self, char_added):
+        current_line_instance = ViewOfLine(debug=self.debug)
+        if  current_line_instance.is_comment_line:
+            return 
         
-            
+        log_debug(self.debug, "char added in non comment line")
+        #autocomplete_cell_block_logic(self.parsed_file, current_line_instance, char_added)
+
+
 if __name__ == "__main__":
     notifier = SelectionNotification()
     handler = editorHandler(notifier)
