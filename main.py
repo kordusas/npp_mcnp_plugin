@@ -95,10 +95,7 @@ class editorHandler:
         self.debug = debug
         
         # initialisng parser instance from file cls method 
-        self.parsed_file = FileParser.from_file(editor.getCurrentFilename())
-
-        # Now, initialize ModelMcnpInput using the class method from_file_parser:
-        mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
+        self._initialise_parser_and_mcnp_input()
         
         
 
@@ -106,11 +103,13 @@ class editorHandler:
         editor.clearCallbacks([SCINTILLANOTIFICATION.UPDATEUI])
         editor.callbackSync(self.on_select, [SCINTILLANOTIFICATION.UPDATEUI])
         pass
-    def on_file_change(self):
+
+    def _initialise_parser_and_mcnp_input(self):
         """
-        if file name is changed, the file is parsed again.
+        parse the file and create the mcnp input instance.
         """
-        self.parsed_file.parse_file()
+        self.parsed_file = FileParser.from_file(editor.getCurrentFilename())
+        self.parsed_file.analyse_file()
         self.mcnp_input = self.parsed_file.create_mcnp_input()
         
 
@@ -127,6 +126,7 @@ class editorHandler:
         
             
 if __name__ == "__main__":
-    handler = editorHandler(SelectionNotification())
+    notifier = SelectionNotification()
+    handler = editorHandler(notifier)
     handler.register_callbacks()
     
