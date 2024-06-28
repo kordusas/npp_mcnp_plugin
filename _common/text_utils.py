@@ -1,8 +1,16 @@
 from Npp import editor, console
 from mcnp_utils import Surface
-from notification_utils import log_debug
+from general_utils import log_debug
 import re
-class ViewOfLine():
+
+def get_char_from_args(args):
+    try:
+        return chr(args['ch'])
+    except Exception as e:
+        console.write("Error in on_character_added: {}".format(str(e)))
+        return None
+    
+class ViewOfLine(object):
     """
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
@@ -123,7 +131,7 @@ class ViewOfLine():
     
 
 
-class FileParser():
+class FileParser(object):
     def __init__(self):
         self.filename = []
         self.lines = []
@@ -134,9 +142,6 @@ class FileParser():
         self.has_header = False
         self.block_start_lines = {}
         self.title  = ""
-        self.analyse_file()
-
-        self.surfaces = {}
 
     def find_blocks(self):
         """
@@ -312,7 +317,7 @@ class FileParser():
            log_debug(True,"Error reading file: {}\n".format(str(e)) )  
         
         log_debug(True,"Parsed {} lines from file: {}\n".format(len(instance.lines), file_path) )  
-        instance.analyse_file
+        instance.analyse_file()
         return instance
  
         
