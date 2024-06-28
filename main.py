@@ -109,7 +109,6 @@ class editorHandler:
         parse the file and create the mcnp input instance.
         """
         self.parsed_file = FileParser.from_file(editor.getCurrentFilename())
-        self.parsed_file.analyse_file()
         self.mcnp_input = self.parsed_file.create_mcnp_input()
         
 

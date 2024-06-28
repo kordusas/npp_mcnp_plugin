@@ -134,6 +134,7 @@ class FileParser():
         self.has_header = False
         self.block_start_lines = {}
         self.title  = ""
+        self.analyse_file()
 
         self.surfaces = {}
 
@@ -300,21 +301,19 @@ class FileParser():
         Class method to create an instance of FileParser from a file path.
         """
         instance = cls()
-        # Implement file reading and parsing logic here
-        # For example:
-        # with open(file_path, 'r') as file:
-        #     data = file.read()
-        #     # Parse data and populate the instance attributes
-        filename = file_path
-        lines = []
+
+        instance.filename = file_path
+        instance.lines = []
         try:
-            with open(filename, 'r') as file:
+            with open(file_path, 'r') as file:
                 for i, line in enumerate(file, 1):
-                    lines.append(line.lower())
+                    instance.lines.append(line.lower())
         except Exception as e:
            log_debug(True,"Error reading file: {}\n".format(str(e)) )  
         
-        log_debug(True,"Parsed {} lines from file: {}\n".format(len(lines), filename) )  
+        log_debug(True,"Parsed {} lines from file: {}\n".format(len(instance.lines), file_path) )  
+        instance.analyse_file
+        return instance
  
         
 
