@@ -4,9 +4,6 @@ from _common.notification_utils import SelectionNotification
 from _common.mcnp_utils  import ModelMcnpInput   
 from Npp import editor, SCINTILLANOTIFICATION
     
-
-
-
 def BlockPreseterFactory(self, block_type,  view_of_current_line, mcnp_input, notifier):
     """
     This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
@@ -109,7 +106,7 @@ class editorHandler:
         parse the file and create the mcnp input instance.
         """
         self.parsed_file = FileParser.from_file(editor.getCurrentFilename())
-        self.mcnp_input = self.parsed_file.create_mcnp_input()
+        self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
         
 
     def on_select(self)
