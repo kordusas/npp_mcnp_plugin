@@ -36,8 +36,8 @@ class Surface(Printable):
             return "Surface %s: %s %s " % (self.surface_id, self.surface_type, self.parameters)
     def print_output(self):
         if not self.transformation:
-            return "%s: %s %s" % (self.surface_id, self.surface_type, self.parameters)
-        return "%s: %s %s %s" % (self.surface_id, self.transformation, self.surface_type, self.parameters)
+            return "%s %s %s" % (self.surface_id, self.surface_type, self.parameters)
+        return "%s %s %s %s" % (self.surface_id, self.transformation, self.surface_type, self.parameters)
 
 class Isotope(object):
     def __init__(self, name, z, a, abundance):
