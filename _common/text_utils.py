@@ -15,7 +15,7 @@ class ViewOfLine(object):
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
     def __init__(self, debug=True):
-        self.text = editor.getSelText().lower()
+        self.selected_text = editor.getSelText().lower()
         self.selection_start = editor.getSelectionStart()
         self.selection_end = editor.getSelectionEnd()
         self.cursor_column = editor.getColumn(editor.getCurrentPos())
@@ -36,7 +36,7 @@ class ViewOfLine(object):
             return None  # Or any default value or action
     @property
     def selected_text_list(self):
-        return self.text.split()
+        return self.selected_text.split()
     @property
     def current_line_list(self):
         return self.current_line.split()
@@ -52,7 +52,7 @@ class ViewOfLine(object):
         """
         Checks if there are non-digit characters before the cursor in the current line.
         """
-        return any(char.isalpha() for char in self.text_till_cursor)
+        return any(char.isalpha() for char in self.selected_text_till_cursor)
 
     @property
     def is_continuation_line(self):
@@ -62,7 +62,7 @@ class ViewOfLine(object):
         return self.current_line.strip() == ""  
     @property
     def selection_is_empty(self):
-        return self.text.strip() == ""
+        return self.selected_text.strip() == ""
     @property
     def is_comment_line(self):
         return self.current_line.strip().startswith('c') 
@@ -78,7 +78,7 @@ class ViewOfLine(object):
         return self._find_last_number_in_string(self.current_line)
     @property
     def last_number_before_cursor(self):
-        return self._find_last_number_in_string(self.text_till_cursor)
+        return self._find_last_number_in_string(self.selected_text_till_cursor)
     
     @property
     def last_entry_before_cursor(self):
@@ -111,9 +111,9 @@ class ViewOfLine(object):
         Prepend the full MCNP input line if the current line is a continuation line.
         """
         if not self.is_continuation_line:
-            return self.text
+            return self.selected_text
 
-        full_line_parts = [self.text]
+        full_line_parts = [self.selected_text]
         line_offset = 1
         while True:
             try:
@@ -140,7 +140,7 @@ class FileParser(object):
         self.surfaces_block = []
         self.physics_block = []
         self.has_header = False
-        self.block_start_lines = {}
+        self.block_locations = {}
         self.title  = ""
 
     def find_blocks(self):
@@ -148,7 +148,7 @@ class FileParser(object):
         Finds and returns the different blocks of data in the file.
 
         Returns:
-            block_start_lines (dict): The start and end lines of each block.
+            block_locations (dict): The start and end lines of each block.
         """
         console.write("Finding blocks...\n")
 
@@ -168,9 +168,9 @@ class FileParser(object):
             block_start_indices.insert(0, 0)
         
         # +2 because first line is always a title
-        self.block_start_lines['cells'] = {'start': block_start_indices[0]+1, 'end': block_start_indices[1]}
-        self.block_start_lines['surfaces'] = {'start': block_start_indices[1], 'end': block_start_indices[2]}
-        self.block_start_lines['physics'] = {'start': block_start_indices[2], 'end': len(self.lines)}
+        self.block_locations['cells'] = {'start': block_start_indices[0]+1, 'end': block_start_indices[1]}
+        self.block_locations['surfaces'] = {'start': block_start_indices[1], 'end': block_start_indices[2]}
+        self.block_locations['physics'] = {'start': block_start_indices[2], 'end': len(self.lines)}
                 
         return 0
 
@@ -179,10 +179,10 @@ class FileParser(object):
         Parses the different blocks of data in the file.
 
         """
-        self.title = self.lines[self.block_start_lines['cells']['start']-1]
-        self.cells_block = self.lines[self.block_start_lines['cells']['start']:self.block_start_lines['cells']['end']]
-        self.surfaces_block = self.lines[self.block_start_lines['surfaces']['start'] + 1:self.block_start_lines['surfaces']['end']]
-        self.physics_block = self.lines[self.block_start_lines['physics']['start'] + 1:]
+        self.title = self.lines[self.block_locations['cells']['start']-1]
+        self.cells_block = self.lines[self.block_locations['cells']['start']:self.block_locations['cells']['end']]
+        self.surfaces_block = self.lines[self.block_locations['surfaces']['start'] + 1:self.block_locations['surfaces']['end']]
+        self.physics_block = self.lines[self.block_locations['physics']['start'] + 1:]
 
         console.write("Cells block: {}\nSurfaces block: {}\nPhysics block: {}\n".format(
             len(self.cells_block), len(self.surfaces_block), len(self.physics_block)
@@ -248,7 +248,7 @@ class FileParser(object):
             surface = None
         return surface
     
-    def is_in_cell_block(self, selected_line):
+    def is_in_cell_block(self, line_number):
         """
         Determines if the specified line is in the cells block.
 
@@ -258,13 +258,13 @@ class FileParser(object):
         Returns:
             bool: True if the line is in the cells block, False otherwise.
         """
-        if  self.block_start_lines['cells']['start'] <= selected_line <= self.block_start_lines['cells']['end']:
+        if  self.block_locations['cells']['start'] <= line_number <= self.block_locations['cells']['end']:
             is_in_cell_block = True
         else:
             is_in_cell_block = False
         return is_in_cell_block
     
-    def is_in_surface_block(self, selected_line):
+    def is_in_surface_block(self, line_number):
         """
         Determines if the specified line is in the surfaces block.
 
@@ -274,13 +274,13 @@ class FileParser(object):
         Returns:
             bool: True if the line is in the surfaces block, False otherwise.
         """
-        if self.block_start_lines['surfaces']['start'] <= selected_line <= self.block_start_lines['surfaces']['end']:
+        if self.block_locations['surfaces']['start'] <= line_number <= self.block_locations['surfaces']['end']:
             is_in_surface_block = True
         else:
             is_in_surface_block = False
         return is_in_surface_block
     
-    def is_in_physics_block(self, selected_line):
+    def is_in_physics_block(self, line_number):
         """
         Determines if the specified line is in the physics block.
 
@@ -290,7 +290,7 @@ class FileParser(object):
         Returns:
             bool: True if the line is in the physics block, False otherwise.
         """
-        if self.block_start_lines['physics']['start'] <= selected_line <=  self.block_start_lines['physics']['end'] :
+        if self.block_locations['physics']['start'] <= line_number <=  self.block_locations['physics']['end'] :
             is_in_physics_block = True
         else:
             is_in_physics_block = False
