@@ -1,6 +1,16 @@
-# from text_utils import FileParser
+from abc import ABCMeta, abstractmethod
+from _common.information import natural_abundances
 
-class Surface(object):
+class Printable(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def print_output(self):
+        pass
+
+
+# class Surface is a Printable object class that has the following attributes:    
+class Surface(Printable):
     ALLOWED_SURFACE_TYPES = ['box', 'rpp', 'sph', 'rcc', 'rhp', 'rec', 'trc', 'ell', 'wed', 'arb', 'px', 'py', 'pz', 'so', 's', 'sx', 'sy', 'sz', 'c/x', 'c/y', 'c/z', 'cx', 'cy', 'cz', 'k/x', 'k/y', 'k/z', 'kx', 'ky', 'kz', 'sq', 'gq', 'tx', 'ty', 'tz', 'x', 'y', 'z', 'p']
 
     def __init__(self, surface_id, surface_type, parameters, comment, transformation=None):
@@ -24,7 +34,10 @@ class Surface(object):
             return "Surface %s: %s %s  tr: %s" % (self.surface_id, self.surface_type, self.parameters, self.transformation)
         else:
             return "Surface %s: %s %s " % (self.surface_id, self.surface_type, self.parameters)
-
+    def print_output(self):
+        if not self.transformation:
+            return "%s: %s %s" % (self.surface_id, self.surface_type, self.parameters)
+        return "%s: %s %s %s" % (self.surface_id, self.transformation, self.surface_type, self.parameters)
 
 class Isotope(object):
     def __init__(self, name, z, a, abundance):
@@ -46,14 +59,10 @@ class Isotope(object):
         return element_names.get(z, 'Unknown')
 
 
-class Material(object):
+class Material(Printable):
     """
     later need to fix the part where both density and atomic density can be present. this cannot be the case.
     """    
-    natural_abundances = {
-        6: [(6012, 0.9893), (6013, 0.0107)],
-        92: [(92235, 0.007), (92238, 0.993)],
-    }
 
     def __init__(self, name, material_id=None):
         self.name = name
