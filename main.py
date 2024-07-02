@@ -10,88 +10,7 @@ CHAR_PERIOD = "."
 CHAR_SPACE = " "
 CHAR_L = "l"
 CHAR_HASH = "#"
-    
-def BlockPreseterFactory(block_type,  view_of_current_line, mcnp_input, notifier):
-    """
-    This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
-    """
-    
-    if block_type == "surface":
-        return SurfaceBlockPresenter(view_of_current_line, mcnp_input, notifier)
-    elif block_type == "cell":
-        return CellBlockPresenter(view_of_current_line, mcnp_input, notifier)
-    elif block_type == "physics":
-        return PhysicsBlockPresenter(view_of_current_line, mcnp_input, notifier)    
-
-
-class AbstractBlockSelectionPresenter():
-    """
-    This class is used to handle the selection of blocks of text.
-    """
-    def __init__(self, view_of_current_line, mcnp_input, notifier):
-        self.block_presenter = ""
-        pass
-    
-    def notify_selection(self):
-        """
-        This function shows information to the user about the selection
-        """
-        return {"block_type": self.block_presenter, "type": "type of selection in block", "value": "value"}
-
-
-class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
-    """
-    This class is used to handle the selection of surface blocks of text.
-    """
-    pass
-
-class CellBlockPresenter(AbstractBlockSelectionPresenter):
-    """
-    This class is used to handle the selection of cell blocks of text.
-    """
-    def is_cell_like_but_format(self):
-        """
-        This function checks if the cell is in the correct format.
-        """
-        pass
-    def is_cell_id_selected(self):
-        """
-        This function checks if the cell id is selected.
-        """
-        pass
-    def is_material_id_selected(self):
-        """
-        This function checks if the material id is selected.
-        It analyses the view_of_current_line and returns True if the material is selected.
-        """
-        pass
-    def is_density_selected(self):
-        """
-        This function checks if the density is selected.
-        It analyses the view_of_current_line and returns True if the density is selected.
-        """
-        pass
-    def is_surface_id_selected(self):
-        """
-        This function checks if the surface id is selected.
-        """
-        pass
-    def is_cell_id_in_cell_definition_selected(self):
-        """
-        This function checks if the cell id is selected in the cell definition.
-        """
-        pass
-    def notify_selection(self):
-        """
-        This function analyses the cell.
-        """
-        pass
-
-class PhysicsBlockPresenter(AbstractBlockSelectionPresenter):
-    """
-    This class is used to handle the selection of physics blocks of text.
-    """
-    pass
+from _common.presenter_utils import BlockPreseterFactory
 
 class editorHandler:
     def __init__(self, notifier, debug=True):
@@ -118,12 +37,20 @@ class editorHandler:
         
 
     def on_select(self, args):
+        # if the selection arguments are not updated
+        #  and the selection is not updated
+        # and selection is empty then return
+        if  args['updated'] is False &  UPDATE.SELECTION is False:
+            return 
         # getting the current line and the selection in a class
         view_of_current_line = ViewOfLine()
         
+        # if the current line is a comment or the selection is empty or the line is empty then return
+        if view_of_current_line.is_comment_line or view_of_current_line.selection_is_empty or view_of_current_line.is_empty_line:
+            return
         # getting the block type according to which we can select presenter
         block_type = self.mcnp_input.return_block_type(view_of_current_line.current_line_no)
-        
+        log_debug(self.debug, "Block type is: %s\n" % block_type)   
         # block presenter can analysie the 
         block_presenter = BlockPreseterFactory(block_type, self.mcnp_input, view_of_current_line, self.notifier )
         
