@@ -158,7 +158,7 @@ class Cell(object):
 
 
 class ModelMcnpInput(object):
-    def __init__(self, surfaces=None, cells=None, materials=None, tallies=None, physics=None):
+    def __init__(self, surfaces=None, cells=None, materials=None, tallies=None, physics=None, block_locations=None):
         """
         Initializes the MCNP input model with optional surfaces, cells, materials, tallies, and physics components.
 
@@ -176,6 +176,8 @@ class ModelMcnpInput(object):
         self.materials = {}
         self.tallies = {}
         self.physics = {}
+        self.block_locations = block_locations
+
         self.add_surfaces(surfaces)
         self.add_cells(cells)
         self.add_materials(materials)
@@ -242,7 +244,9 @@ class ModelMcnpInput(object):
         materials = file_parser.get_materials()
         tallies = file_parser.get_tallies()
         physics = file_parser.get_physics()
-        return cls(surfaces, cells, materials, tallies, physics)
+        block_locations = file_parser.block_locations
+
+        return cls(surfaces, cells, materials, tallies, physics, block_locations)
 
     def get_surface(self, surface_number):
         """
@@ -267,19 +271,45 @@ class ModelMcnpInput(object):
         
     def is_line_in_surface_block(self, line_number):
         """
-        This function returns True if the line number is in a surface block.
-        """ 
-        pass    
+        Determines if the specified line is in the surfaces block.
+
+        Args:
+            line (str): The line to check.
+
+        Returns:
+            bool: True if the line is in the surfaces block, False otherwise.
+        """
+        if self.block_locations['surfaces']['start'] <= line_number <= self.block_locations['surfaces']['end']:
+            return True
+        return False 
+    
     def is_line_in_cell_block(self, line_number):
         """
-        This function returns True if the line number is in a cell block.
-        """ 
-        pass
+        Determines if the specified line is in the cells block.
+
+        Args:
+            line (str): The line to check.
+
+        Returns:
+            bool: True if the line is in the cells block, False otherwise.
+        """
+        if  self.block_locations['cells']['start'] <= line_number <= self.block_locations['cells']['end']:
+            return  True
+        
+        return False
+    
     def is_line_in_physics_block(self, line_number):
         """
-        This function returns True if the line number is in a physics block.
+        Determines if the specified line is in the physics block.
+        Args:
+            line (str): The line to check.
+        Returns:
+            bool: True if the line is in the physics block, False otherwise.
         """ 
-        pass
+        if self.block_locations['physics']['start'] <= line_number <= self.block_locations['physics']['end']:
+            return True
+        return False
+    
     def return_block_type(self, line_number):
         """
         This function returns the type of block the line is in.
