@@ -52,7 +52,7 @@ class ViewOfLine(object):
         """
         Checks if there are non-digit characters before the cursor in the current line.
         """
-        return any(char.isalpha() for char in self.selected_text_till_cursor)
+        return any(char.isalpha() for char in self.text_till_cursor)
 
     @property
     def is_continuation_line(self):
@@ -78,7 +78,7 @@ class ViewOfLine(object):
         return self._find_last_number_in_string(self.current_line)
     @property
     def last_number_before_cursor(self):
-        return self._find_last_number_in_string(self.selected_text_till_cursor)
+        return self._find_last_number_in_string(self.text_till_cursor)
     
     @property
     def last_entry_before_cursor(self):
