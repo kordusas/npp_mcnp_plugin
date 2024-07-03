@@ -39,8 +39,8 @@ class editorHandler:
     def on_select(self, args):
         # if the selection arguments are not updated
         #  and the selection is not updated
-        # and selection is empty then return
-        if  args['updated'] is False &  UPDATE.SELECTION is False:
+        
+        if  args['updated'] is False or  UPDATE.SELECTION is False:
             return 
         # getting the current line and the selection in a class
         view_of_current_line = ViewOfLine()
@@ -48,11 +48,13 @@ class editorHandler:
         # if the current line is a comment or the selection is empty or the line is empty then return
         if view_of_current_line.is_comment_line or view_of_current_line.selection_is_empty or view_of_current_line.is_empty_line:
             return
+        
         # getting the block type according to which we can select presenter
         block_type = self.mcnp_input.return_block_type(view_of_current_line.current_line_no)
         log_debug(self.debug, "Block type is: %s\n" % block_type)   
         # block presenter can analysie the 
-        block_presenter = BlockPreseterFactory(block_type, self.mcnp_input, view_of_current_line, self.notifier )
+        block_presenter = BlockPreseterFactory(block_type, view_of_current_line= view_of_current_line, mcnp_input=self.mcnp_input, notifier=self.notifier, debug=self.debug )
+        block_presenter.notify_selection()
         
     def on_character_added(self, args):
             char_added = get_char_from_args(args)
@@ -75,6 +77,6 @@ class editorHandler:
 
 if __name__ == "__main__":
     notifier = SelectionNotification()
-    handler = editorHandler(notifier)
+    handler = editorHandler(notifier, debug=True)
     handler.register_callbacks()
     
