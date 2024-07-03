@@ -8,7 +8,16 @@ class Printable(object):
     def print_output(self):
         pass
 
+class transformation(Printable):
+    def __init__(self, transformation_id, parameters):
+        self.transformation_id = transformation_id
+        self.parameters = parameters
+    def __str__(self):
+        return "Transformation %s: %s" % (self.transformation_id, self.parameters)
 
+    def print_output(self):
+        return "Not Implemented"
+    
 # class Surface is a Printable object class that has the following attributes:    
 class Surface(Printable):
     ALLOWED_SURFACE_TYPES = ['box', 'rpp', 'sph', 'rcc', 'rhp', 'rec', 'trc', 'ell', 'wed', 'arb', 'px', 'py', 'pz', 'so', 's', 'sx', 'sy', 'sz', 'c/x', 'c/y', 'c/z', 'cx', 'cy', 'cz', 'k/x', 'k/y', 'k/z', 'kx', 'ky', 'kz', 'sq', 'gq', 'tx', 'ty', 'tz', 'x', 'y', 'z', 'p']
@@ -268,7 +277,13 @@ class ModelMcnpInput(object):
         This function returns the tally with the given number.
         """
         pass
-        
+    def get_transformation(self, transformation_id):
+        """
+        This function returns the transformation with the given number. currently  a placeholder
+        """
+        transformation_instance = transformation(transformation_id, "transformation parsing not implemented yet")
+
+        return transformation_instance
     def is_line_in_surface_block(self, line_number):
         """
         Determines if the specified line is in the surfaces block.
