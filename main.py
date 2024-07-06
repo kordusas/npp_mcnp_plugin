@@ -34,7 +34,6 @@ class editorHandler:
         """
         self.parsed_file = FileParser.from_file(notepad.getCurrentFilename())
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
-        
 
     def on_select(self, args):
         # if the selection arguments are not updated

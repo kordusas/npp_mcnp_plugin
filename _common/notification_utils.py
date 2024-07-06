@@ -17,37 +17,6 @@ class SelectionNotification():
 
     def __init__(self):
         pass
-
-    def notify_surface_block_selected(self, analysis_result):
-        """
-        This function notifies the user what in a surface block has been selected.
-        """
-        action_type = analysis_result.get("type")
-        value = analysis_result.get("value")
-
-        # if surface type is selected we find description in the dict and popup message
-        if action_type == "surface_type":
-            self._popup_notification(surface_info.get(value))
-        if action_type == "transformation_id":
-            self._popup_notification(analysis_result["value"])
-
-    def notify_cell_block_selected(self, analysis_result):
-        """
-        This function notifies the user what in a cell block has been selected.
-        """
-        pass
-
-    def notify_physics_block_selected(self, analysis_result):
-        """
-        This function notifies the user what in a physics block has been selected.
-        """
-        pass
-
-    def notify_no_block_selected(self):
-        """
-        This function notifies the user that no block has been selected.
-        """
-        pass 
     def _popup_notification(self, message):
         """
         This function checks if message is text and pops up a notification message.
@@ -59,5 +28,12 @@ class SelectionNotification():
             editor.callTipShow(editor.getSelectionEnd(), message)
         else:
             editor.callTipShow(editor.getSelectionEnd(), "wrong message type {}\n".format(type(message)))
-        
+
+    def notify(self, analysis_result):
+        action_type = analysis_result.get("type")
+        value = analysis_result.get("value")
+        if value:
+            # if surface type is selected we find description in the dict and popup message
+            self._popup_notification(analysis_result["value"])
+
             

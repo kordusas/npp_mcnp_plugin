@@ -22,6 +22,10 @@ class ViewOfLine(object):
         self.current_line_no = editor.lineFromPosition(editor.getCurrentPos())
         self.current_line = editor.getLine(self.current_line_no).lower()
         self.debug = debug
+    
+    def is_selection_after_pattern(self, pattern):
+        return pattern in self.text_till_cursor
+        
     @property
     def first_entry_in_line(self):
         try:
