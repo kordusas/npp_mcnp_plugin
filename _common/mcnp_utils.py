@@ -80,13 +80,13 @@ class Material(Printable):
         self.atomic_density = None
         self.isotopes = []
     def __str__(self):
-        return "Material %s: %s" % (self.name, ', '.join([isotope.name for isotope in self.isotopes]))
+        return "Material %s: %s %s" % (self.material_id, self.name, ', '.join([isotope.name for isotope in self.isotopes]))
     def print_output(self):
 
         if self.density is not None:
-            return "%s: %s" % (self.material_id, -self.density)
+            return "%s %s" % (self.material_id, -self.density)
         else:
-            return "%s: %s" % (self.material_id, self.atomic_density)
+            return "%s %s" % (self.material_id, self.atomic_density)
         return
     def add_isotope(self, isotope):
         self.isotopes.append(isotope)
@@ -180,24 +180,21 @@ class ModelMcnpInput(object):
         # add dict self.surfaces = surfaces if surfaces is not None else {}
        
 
-        self.surfaces = {}
-        self.cells = {}
-        self.materials = {}
-        self.tallies = {}
-        self.physics = {}
+        self.surfaces = surfaces
+        self.cells = cells
+        self.materials = materials
+        self.tallies = tallies
+        self.physics = physics
         self.block_locations = block_locations
-
-        self.add_surfaces(surfaces)
-        self.add_cells(cells)
-        self.add_materials(materials)
-        self.add_tallies(tallies)
-        self.add_physics(physics)
 
     def add_surfaces(self, surfaces):
         """Adds surfaces to the model from surface list."""
         if surfaces is not None and type(surfaces) == list:
             for surface in surfaces:
                 self.add_surface(surface)
+        elif surfaces is not None and type(surfaces) == dict:
+            for key in surfaces:
+                self.add_surface(surfaces[key])
 
     def add_surface(self, surface):
         """Adds surfaces to the model."""
@@ -257,22 +254,26 @@ class ModelMcnpInput(object):
 
         return cls(surfaces, cells, materials, tallies, physics, block_locations)
 
-    def get_surface(self, surface_number):
+    def get_surface(self, surface_id):
         """
         This function returns the surface with the given number.
         """
-        pass
-    def get_cell(self, cell_number):
+        # return the surface using get method, set default to None
+        return self.surfaces.get(surface_id, "Surface {}: The Machine god doesn't recognize this surface".format(surface_id))
+        
+    def get_cell(self, cell_id):
         """
         This function returns the cell with the given number.
         """
         pass
-    def get_material(self, material_number):
+    def get_material(self, material_id):
         """ 
         This function returns the material with the given number.
         """
-        pass
-    def get_tally(self, tally_number):
+        material = Material(name="dummy material", material_id=material_id)
+        return material
+    
+    def get_tally(self, tally_id):
         """
         This function returns the tally with the given number.
         """
