@@ -23,13 +23,17 @@ class ViewOfLine(object):
     """
     def __init__(self, debug=True):
         self.selected_text = editor.getSelText().lower()
+        self.debug = debug
+        self._initialize_view_properties()
+        
+    def _initialize_view_properties(self):
+        self.selected_text = editor.getSelText().lower()
         self.selection_start = editor.getSelectionStart()
         self.selection_end = editor.getSelectionEnd()
         self.cursor_column = editor.getColumn(editor.getCurrentPos())
         self.current_line_no = editor.lineFromPosition(editor.getCurrentPos())
-        self.current_line = editor.getLine(self.current_line_no).lower()
-        self.debug = debug
-    
+        self.current_line = self._get_line_without_comment(self.current_line_no)
+
     def is_selection_after_pattern(self, pattern):
         return pattern in self.text_till_cursor
         
