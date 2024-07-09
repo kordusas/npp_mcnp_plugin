@@ -1,5 +1,5 @@
 from Npp import editor, console
-from mcnp_utils import Surface
+from mcnp_utils import Surface, Tally, Transformation, Material
 from general_utils import log_debug
 import re
 
@@ -161,13 +161,13 @@ class ViewOfLine(object):
 
 
 class FileParser(object):
-    def __init__(self):
-        self.filename = []
-        self.lines = []
-        self.message_block = []
-        self.cells_block = []
-        self.surfaces_block = []
-        self.physics_block = []
+    def __init__(self,filename, debug=True):
+        self.filename = filename
+        self.lines = None
+        self.message_block = None
+        self.cells_block = None
+        self.surfaces_block = None
+        self.physics_block = None
         self.has_header = False
         self.block_locations = {}
         self.title  = ""
