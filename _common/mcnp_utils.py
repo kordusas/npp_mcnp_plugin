@@ -205,7 +205,7 @@ class Cell(object):
 
 
 class ModelMcnpInput(object):
-    def __init__(self, surfaces=None, cells=None, materials=None, tallies=None, physics=None, block_locations=None):
+    def __init__(self, surfaces=None, cells=None, materials=None, tallies=None, physics=None, block_locations=None, transformations=None):
         """
         Initializes the MCNP input model with optional surfaces, cells, materials, tallies, and physics components.
 
@@ -223,7 +223,11 @@ class ModelMcnpInput(object):
         self.materials = materials
         self.tallies = tallies
         self.physics = physics
+        self.get_transformations = transformations
         self.block_locations = block_locations
+
+        # add default material
+        self.materials[0] = "Void"
 
     def add_surfaces(self, surfaces):
         """Adds surfaces to the model from surface list."""
@@ -259,11 +263,12 @@ class ModelMcnpInput(object):
     def add_material(self, material):
         """Adds materials to the model."""
         if material is not None:
-            self.material[material.material_id] = material
+            self.material[material.id] = material
+
     def add_tally(self, tally):
         """ add tally instance to the model tally dictionary"""
         if tally is not None:
-            self.tallies[tally.tally_id] = tally
+            self.tallies[tally.id] = tally
 
     def add_tallies(self, tallies):
         """ add tallies to the model tallies dictionary"""
@@ -275,6 +280,7 @@ class ModelMcnpInput(object):
         """Adds physics settings to the model."""
         if physics is not None:
             self.physics = physics
+
     @classmethod
     def from_file_parser(cls, file_parser):
         """
@@ -289,6 +295,7 @@ class ModelMcnpInput(object):
         tallies = file_parser.get_tallies()
         physics = file_parser.get_physics()
         block_locations = file_parser.block_locations
+        transformations = file_parser.get_transformations()
 
         return cls(surfaces, cells, materials, tallies, physics, block_locations)
 
@@ -320,7 +327,7 @@ class ModelMcnpInput(object):
         """
         This function returns the transformation with the given number. currently  a placeholder
         """
-        transformation_instance = transformation(transformation_id, "transformation parsing not implemented yet")
+        transformation_instance = Transformation(transformation_id, "transformation parsing not implemented yet")
 
         return transformation_instance
     def is_line_in_surface_block(self, line_number):
