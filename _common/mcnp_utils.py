@@ -112,7 +112,8 @@ class Material(Printable):
         self.comment = comment
         self.density = None
         self.atomic_density = None
-        self.isotopes = []
+        self.isotopes = isotopes if isotopes is not None else []
+        
     def __str__(self):
         sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
         isotopes_str = '\n'.join([str(iso) for iso in sorted_isotopes])
