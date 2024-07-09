@@ -34,6 +34,12 @@ class Tally(Printable):
         self.energies = energies
     @classmethod
     def create_from_input_line(cls, line, comment=None):
+        """
+        Class method to create a Material instance from an input line.
+        Assumes :
+            the input line contains all of the information about the material. 
+            input line is all lower case and no comments are present in the line.
+        """        
         # Assumption: line format is "f<number>:<particles> <other entries, >"
         # Example: "f4:H,He 1 100"
         
@@ -191,6 +197,12 @@ class Material(Printable):
 
     @classmethod
     def create_from_input_line(cls, line, comment=None):
+        """
+        Class method to create a Material instance from an input line.
+        Assumes :
+            the input line contains all of the information about the material. 
+            input line is all lower case and no comments are present in the line.
+        """
         # Find the material id using regex and then separate the material
         match = re.search(r'm(\d+)(.*)', line)
         if not match:
