@@ -275,9 +275,37 @@ class FileParser(object):
     def get_cells(self):
         pass
     def get_materials(self):
-        pass
+        materials = {}
+        comment = ""
+        for line in self.physics_block:
+            if  is_match_at_start(line, regex_pattern= 'm(\d+)(.*)'):
+                log_debug(self.debug, "Material text: {}\n Material comment: {}\n".format(line, comment))
+                material_instance = Material.create_from_input_line(line,  comment)
+                log_debug(self.debug, "Material instance: {}\n".format(material_instance))
+                materials[material_instance.id] = material_instance
+                comment = ""
+            elif line.startswith("c"):
+                comment += line
+            else:
+                comment = ""
+
+        return materials
+
     def get_tallies(self):
-        pass
+        tallies = {}
+        comment = ""
+        for line in self.physics_block:
+            if  is_match_at_start(line, regex_pattern= '^f\d+:'):
+                tally_instance = Tally.create_from_input_line(line,  comment)
+                tallies[tally_instance.id] = tally_instance
+                comment = ""
+            elif line.startswith("c"):
+                comment += line
+            else:
+                comment = ""
+
+        return tallies
+
     def get_physics(self):
         pass
     def get_surfaces(self):
