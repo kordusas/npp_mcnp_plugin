@@ -121,28 +121,42 @@ class ViewOfLine(object):
 
         return False
     
+    def _get_line_without_comment(self, current_line_no):
+        """
+        Returns the current line without the comment part.
+        """
+        current_line = editor.getLine(current_line_no).lower()
+        if "$" in current_line:
+            current_line = current_line.split("$", 1)[0]
+        return current_line
+
     def get_full_mcnp_input_line(self):
-        """
-        Prepend the full MCNP input line if the current line is a continuation line.
-        """
         if not self.is_continuation_line:
             return self.selected_text
+        return self._merge_continuation_lines()
 
+    def _merge_continuation_lines(self):
         full_line_parts = [self.selected_text]
         line_offset = 1
         while True:
             try:
-                previous_line = editor.getLine(self.current_line_no - line_offset).rstrip()
-            except IndexError:  # Reached the beginning of the document
+                previous_line = self._get_previous_line(line_offset)
+            except IndexError:
                 break
 
-            if not previous_line.startswith('    '):
+            if not self._is_continuation(previous_line):
                 break
 
-            full_line_parts.insert(0, previous_line)
+            full_line_parts.insert(0, previous_line.rstrip())
             line_offset += 1
 
         return ''.join(full_line_parts)
+
+    def _get_previous_line(self, line_offset):
+        return self._get_line_without_comment(self.current_line_no - line_offset)
+
+    def _is_continuation(self, line):
+        return line.startswith('    ')
     
 
 
