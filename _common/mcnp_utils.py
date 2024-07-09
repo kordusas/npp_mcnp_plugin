@@ -120,33 +120,20 @@ class Material(Printable):
         return "Material {}\nTop 5 Isotopes:\nZ   A   Abundance\n{}".format(self.id, isotopes_str)
     
     def print_output(self):
-
         if self.density is not None:
-            return "%s %s" % (self.material_id, -self.density)
+            return "%s %s" % (self.id, -self.density)
         else:
-            return "%s %s" % (self.material_id, self.atomic_density)
+            return "%s %s" % (self.id, self.atomic_density)
         return
     def add_isotope(self, isotope):
         self.isotopes.append(isotope)
-
-    def read_from_mcnp(self, mcnp_input):
-        lines = mcnp_input.splitlines()
-        for line in lines:
-            if line.startswith('M'):
-                parts = line.split()
-                material_name = parts[0][1:]
-                for i in range(1, len(parts), 2):
-                    zzzaaa = int(parts[i])
-                    abundance = float(parts[i+1])
-                    isotope = Isotope.from_zzzaaa(zzzaaa, abundance)
-                    self.add_isotope(isotope)
     
     @staticmethod
     def expand_natural_abundance(isotope):
         if isotope.a == 0:
             return [
                 Isotope.from_zzzaaa(zzzaaa, abundance)
-                for zzzaaa, abundance in Material.natural_abundances.get(isotope.z, [])
+                for zzzaaa, abundance in natural_abundances.get(isotope.z, [])
             ]
         return [isotope]
 
