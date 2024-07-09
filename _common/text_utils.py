@@ -171,27 +171,29 @@ class FileParser(object):
         self.has_header = False
         self.block_locations = {}
         self.title  = ""
+        self.debug = debug
+         
+    def set_header_flag(self):
+        # Determine if we have a header block
+        self.has_header = self.lines[0].startswith("message")
 
-    def find_blocks(self):
+    def set_block_locations(self):
         """
         Finds and returns the different blocks of data in the file.
 
         Returns:
             block_locations (dict): The start and end lines of each block.
         """
-        console.write("Finding blocks...\n")
+        log_debug(True, "Finding blocks...\n")
 
         block_start_indices = []
-        # Determine if we have a header block
-        self.has_header = self.lines[0].startswith("message")
-
-        block_start_indices = []
+        
         for i, line in enumerate(self.lines):
             if line.strip() == "":
                 block_start_indices.append(i)
         
         if self.has_header:
-            self.message_block = self.lines[:block_start_indices[0]]
+            self.parse_header(block_start_indices[0])
             block_start_indices[0] += 1 # adding 1 as this is empty line
         else:
             block_start_indices.insert(0, 0)
@@ -202,16 +204,24 @@ class FileParser(object):
         self.block_locations['physics'] = {'start': block_start_indices[2], 'end': len(self.lines)}
                 
         return 0
+    def parse_header(self, line_no):
+        self.message_block = self.lines[:line_no]
 
+    def parse_title(self):
+        self.title = self.lines[self.block_locations['cells']['start']-1]
     def parse_blocks(self):
+        self.cells_block = self.format_blocks(self.lines[self.block_locations['cells']['start']:self.block_locations['cells']['end']])
+        self.surfaces_block = self.format_blocks(self.lines[self.block_locations['surfaces']['start'] + 1:self.block_locations['surfaces']['end']])
+        self.physics_block = self.format_blocks(self.lines[self.block_locations['physics']['start'] + 1:])
+
+    def parse(self):
         """
         Parses the different blocks of data in the file.
+        I merge the continuation lines for better interpretation of the data.
 
         """
-        self.title = self.lines[self.block_locations['cells']['start']-1]
-        self.cells_block = self.lines[self.block_locations['cells']['start']:self.block_locations['cells']['end']]
-        self.surfaces_block = self.lines[self.block_locations['surfaces']['start'] + 1:self.block_locations['surfaces']['end']]
-        self.physics_block = self.lines[self.block_locations['physics']['start'] + 1:]
+        self.parse_blocks()
+        self.parse_title()
 
         console.write("Cells block: {}\nSurfaces block: {}\nPhysics block: {}\n".format(
             len(self.cells_block), len(self.surfaces_block), len(self.physics_block)
@@ -276,24 +286,18 @@ class FileParser(object):
             console.write("Error parsing surface: {}\n".format(line))
             surface = None
         return surface
-    
-    def is_in_cell_block(self, line_number):
-        """
-        Determines if the specified line is in the cells block.
+       
+    def analyse_file(self):
+        self.set_header_flag()
+        self.set_block_locations()
+        self.parse()
 
-        Args:
-            line (str): The line to check.
+    def read_new_file(self, file_path):
+        self.filename = file_path
+        self.read_file()
+        self.analyse_file()
 
-        Returns:
-            bool: True if the line is in the cells block, False otherwise.
-        """
-        if  self.block_locations['cells']['start'] <= line_number <= self.block_locations['cells']['end']:
-            is_in_cell_block = True
-        else:
-            is_in_cell_block = False
-        return is_in_cell_block
-    
-    def is_in_surface_block(self, line_number):
+    def read_file(self):
         """
         Determines if the specified line is in the surfaces block.
 
@@ -330,25 +334,19 @@ class FileParser(object):
         self.parse_blocks()
         
     @classmethod
-    def from_file(cls, file_path):
+    def from_file(cls, file_path, debug=True):
         """
         Class method to create an instance of FileParser from a file path.
         """
-        instance = cls()
+        instance = cls(file_path)
 
-        instance.filename = file_path
-        instance.lines = []
-        try:
-            with open(file_path, 'r') as file:
-                for i, line in enumerate(file, 1):
-                    instance.lines.append(line.lower())
-        except Exception as e:
-           log_debug(True,"Error reading file: {}\n".format(str(e)) )  
+        instance.debug = debug
+        instance.read_file()
+        instance.analyse_file()
         
         log_debug(True,"Parsed {} lines from file: {}\n".format(len(instance.lines), file_path) )  
-        instance.analyse_file()
+        
         return instance
  
         
-
 
