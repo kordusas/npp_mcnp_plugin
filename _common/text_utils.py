@@ -324,7 +324,7 @@ class FileParser(object):
                 comment += line
                 continue
             surface = self.parse_surface(line, comment)
-            parsed_surfaces[int(surface.surface_id)] = surface
+            parsed_surfaces[surface.id] = surface
             comment = ""
         return parsed_surfaces
     
@@ -340,6 +340,7 @@ class FileParser(object):
             surface (Surface): The parsed `Surface` object.
         """
         surface_data = line.split("$")
+        comment = ""
         if len(surface_data) >= 2:
             comment = surface_data[1].strip()
         
@@ -354,7 +355,7 @@ class FileParser(object):
                 surface_transform = None
                 surface_type = surface_data[1]
                 surface_params = ' '.join(surface_data[2:])
-            surface = Surface(surface_id, surface_type, surface_params, comment, surface_transform)
+            surface = Surface(int(surface_id), surface_type, surface_params, comment, surface_transform)
             console.write("Surface parsed: {}\n".format(surface_id))
         else:
             console.write("Error parsing surface: {}\n".format(line))
@@ -373,39 +374,13 @@ class FileParser(object):
 
     def read_file(self):
         """
-        Determines if the specified line is in the surfaces block.
-
-        Args:
-            line (str): The line to check.
-
-        Returns:
-            bool: True if the line is in the surfaces block, False otherwise.
+        Reads the file and stores the lines in the `lines` attribute in lower case.
         """
-        if self.block_locations['surfaces']['start'] <= line_number <= self.block_locations['surfaces']['end']:
-            is_in_surface_block = True
-        else:
-            is_in_surface_block = False
-        return is_in_surface_block
-    
-    def is_in_physics_block(self, line_number):
-        """
-        Determines if the specified line is in the physics block.
-
-        Args:
-            line (str): The line to check.
-
-        Returns:
-            bool: True if the line is in the physics block, False otherwise.
-        """
-        if self.block_locations['physics']['start'] <= line_number <=  self.block_locations['physics']['end'] :
-            is_in_physics_block = True
-        else:
-            is_in_physics_block = False
-        return is_in_physics_block
-    
-    def analyse_file(self):
-        self.find_blocks()
-        self.parse_blocks()
+        try:
+            with open(self.filename, 'r') as file:
+                self.lines = [line.lower() for line in file.readlines()]
+        except Exception as e:
+            log_debug(True, "Error reading file: {}\n".format(str(e))) 
         
     @classmethod
     def from_file(cls, file_path, debug=True):
