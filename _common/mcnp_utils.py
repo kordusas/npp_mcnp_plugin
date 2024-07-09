@@ -48,7 +48,8 @@ class Surface(Printable):
     ALLOWED_SURFACE_TYPES = ['box', 'rpp', 'sph', 'rcc', 'rhp', 'rec', 'trc', 'ell', 'wed', 'arb', 'px', 'py', 'pz', 'so', 's', 'sx', 'sy', 'sz', 'c/x', 'c/y', 'c/z', 'cx', 'cy', 'cz', 'k/x', 'k/y', 'k/z', 'kx', 'ky', 'kz', 'sq', 'gq', 'tx', 'ty', 'tz', 'x', 'y', 'z', 'p']
 
     def __init__(self, surface_id, surface_type, parameters, comment, transformation=None):
-        self.surface_id = surface_id # int
+        assert isinstance(surface_id, int), "surface_id must be an int"
+        self.id = surface_id # int
         self.surface_type = surface_type
         self.transformation = transformation
         self.parameters = parameters
@@ -58,20 +59,20 @@ class Surface(Printable):
             raise ValueError("Invalid surface type. surface type: %s are not allowed" % ', '.join(self.surface_type))
 
     def update_surface(self, new_surface_id, new_parameters):
-        self.surface_id = new_surface_id
+        self.id = new_surface_id
         self.parameters = new_parameters
     def update_surface_parameters(self, new_parameters):
         self.parameters = new_parameters
 
     def __str__(self):
         if self.transformation:
-            return "Surface %s: %s %s  tr: %s" % (self.surface_id, self.surface_type, self.parameters, self.transformation)
+            return "Surface %s: %s %s  tr: %s" % (self.id, self.surface_type, self.parameters, self.transformation)
         else:
-            return "Surface %s: %s %s " % (self.surface_id, self.surface_type, self.parameters)
+            return "Surface %s: %s %s " % (self.id, self.surface_type, self.parameters)
     def print_output(self):
         if not self.transformation:
-            return "%s %s %s" % (self.surface_id, self.surface_type, self.parameters)
-        return "%s %s %s %s" % (self.surface_id, self.transformation, self.surface_type, self.parameters)
+            return "%s %s %s" % (self.id, self.surface_type, self.parameters)
+        return "%s %s %s %s" % (self.id, self.transformation, self.surface_type, self.parameters)
 
 class Isotope(object):
     def __init__(self, name, z, a, abundance):
