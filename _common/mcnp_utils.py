@@ -76,6 +76,22 @@ class Surface(Printable):
         return "%s %s %s %s" % (self.id, self.transformation, self.surface_type, self.parameters)
 
 class Isotope(object):
+    # class variable for easo of access to element names
+    element_names = {
+    1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
+    11: 'Na', 12: 'Mg', 13: 'Al', 14: 'Si', 15: 'P', 16: 'S', 17: 'Cl', 18: 'Ar', 19: 'K', 20: 'Ca',
+    21: 'Sc', 22: 'Ti', 23: 'V', 24: 'Cr', 25: 'Mn', 26: 'Fe', 27: 'Co', 28: 'Ni', 29: 'Cu', 30: 'Zn',
+    31: 'Ga', 32: 'Ge', 33: 'As', 34: 'Se', 35: 'Br', 36: 'Kr', 37: 'Rb', 38: 'Sr', 39: 'Y', 40: 'Zr',
+    41: 'Nb', 42: 'Mo', 43: 'Tc', 44: 'Ru', 45: 'Rh', 46: 'Pd', 47: 'Ag', 48: 'Cd', 49: 'In', 50: 'Sn',
+    51: 'Sb', 52: 'Te', 53: 'I', 54: 'Xe', 55: 'Cs', 56: 'Ba', 57: 'La', 58: 'Ce', 59: 'Pr', 60: 'Nd',
+    61: 'Pm', 62: 'Sm', 63: 'Eu', 64: 'Gd', 65: 'Tb', 66: 'Dy', 67: 'Ho', 68: 'Er', 69: 'Tm', 70: 'Yb',
+    71: 'Lu', 72: 'Hf', 73: 'Ta', 74: 'W', 75: 'Re', 76: 'Os', 77: 'Ir', 78: 'Pt', 79: 'Au', 80: 'Hg',
+    81: 'Tl', 82: 'Pb', 83: 'Bi', 84: 'Po', 85: 'At', 86: 'Rn', 87: 'Fr', 88: 'Ra', 89: 'Ac', 90: 'Th',
+    91: 'Pa', 92: 'U', 93: 'Np', 94: 'Pu', 95: 'Am', 96: 'Cm', 97: 'Bk', 98: 'Cf', 99: 'Es', 100: 'Fm',
+    101: 'Md', 102: 'No', 103: 'Lr', 104: 'Rf', 105: 'Db', 106: 'Sg', 107: 'Bh', 108: 'Hs', 109: 'Mt',
+    110: 'Ds', 111: 'Rg', 112: 'Cn', 113: 'Nh', 114: 'Fl', 115: 'Mc', 116: 'Lv', 117: 'Ts', 118: 'Og'
+}
+
     def __init__(self, name, z, a, abundance, library=None):
         self.name = name
         self.z = z
@@ -91,15 +107,15 @@ class Isotope(object):
         name = cls.get_element_name(z)
         return cls(name, z, a, abundance, library)
 
-    @staticmethod
-    def get_element_name(z):
-        element_names = {6: 'C', 92: 'U', 1: 'H', 2: 'He'}
-        return element_names.get(z, 'Unknown Element')
+    @classmethod
+    def get_element_name(cls, z):
+        # Access the class variable for element names
+        return cls.element_names.get(z, 'Unknown Element')
     
     def add_comment(self, comment):
         self.comment += comment
     def __str__(self):
-        return "{:03d} {:03d} {:.3e}".format(self.z, self.a, self.abundance)
+        return "{:>4} {:>3} {:>3} {:.3e}".format(self.name, self.z, self.a, self.abundance)
 
 
 class Material(Printable):
@@ -118,7 +134,10 @@ class Material(Printable):
     def __str__(self):
         sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
         isotopes_str = '\n'.join([str(iso) for iso in sorted_isotopes])
-        return "Material {}\nTop 5 Isotopes:\nZ   A   Abundance\n{}".format(self.id, isotopes_str)
+        # if we have more than 5 isotopes show only top 5 
+        if len(self.isotopes) > 5:
+            return "Material {}\nTop 5 Isotopes:\nName   Z   A   Abundance\n{}".format(self.id, isotopes_str)
+        return "Material {}\nIsotopes:\nName   Z   A Abundance\n{}".format(self.id, isotopes_str)
     
     def print_output(self):
         if self.density is not None:
