@@ -226,6 +226,52 @@ class FileParser(object):
         console.write("Cells block: {}\nSurfaces block: {}\nPhysics block: {}\n".format(
             len(self.cells_block), len(self.surfaces_block), len(self.physics_block)
         ))
+
+    def format_blocks(self, block):
+        """
+        removes leading spaces if less than 4 spaces 
+
+        Merges continuation lines in the file.
+        If the line starts with 4 spaces, it is a continuation line.
+        If the line has a comment after a '$', it is appended to comment_line
+        the comment_line is then appended to the previous line.
+
+        If accidenally the line is empty we skip it.
+        """
+        merged_block = []
+        comment = ""
+        for  line in block:
+            # strip the continuation sign which may be present in some cases but not all
+            line = line.rstrip('\n')
+
+            # formatting the line and comment
+            line, comment = self.split_comment_from_line(line, comment)
+
+            # remove continue line character at the end of line
+            line = line.rstrip('&')
+            
+            if line.strip() == "":
+                continue
+            # if lines starts with less than 4 spaces then remove them
+            elif len(line) - len(line.lstrip(' ')) < 4:
+                line = line.lstrip(' ')
+
+
+            # merging the continuation lines
+            if line.startswith("    "):
+                merged_block[-1] += line
+            else:
+                merged_block.append(line) # Add the current line to merged_block
+                if comment:
+                    # insert this comment as one before the last element
+                    merged_block.insert(-2, "c " + comment.strip() + "\n")
+                    comment = ""  # Reset comment after inserting
+
+        return merged_block
+    
+    def _parse_cell(self):
+        pass
+
     def get_cells(self):
         pass
     def get_materials(self):
