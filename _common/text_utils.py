@@ -80,7 +80,7 @@ class ViewOfLine(object):
         return self.selected_text.strip() == ""
     @property
     def is_comment_line(self):
-        return self.current_line.strip().startswith('c') 
+        return self.current_line.lstrip().startswith('c') 
     # Helper method for regular expressions (example)
     def _find_last_number_in_string(self, string):
         try:
