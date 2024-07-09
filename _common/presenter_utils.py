@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from general_utils import log_debug
-from general_utils import format_notifier_message
+from general_utils import format_notifier_message, validate_return_id_as_int
 from information import surface_info
 import re
 
@@ -83,13 +83,6 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             return first_entry_in_selection == second_entry_in_current_line
         return False
     
-    def is_density_selected(self):
-        """
-        This function checks if the density is selected.
-        It analyses the view_of_current_line and returns True if the density is selected.
-        """
-        pass
-
     def is_cell_id_in_cell_definition_selected(self):
         """
         This function checks if the cell id is selected in the cell definition.
@@ -121,7 +114,9 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function handles the cell id selection.
         """
-        cell_id = self.view_of_selected_line.first_entry_in_selection.lstrip("0")
+        cell_id = self.view_of_selected_line.first_entry_in_selection
+        cell_id = validate_return_id_as_int(cell_id)
+
         log_debug(self.debug, "Cell id selected: {}\n".format(cell_id))
         return {"type": "cell_id", "value": "selected cell {}".format(cell_id)}
     
@@ -129,7 +124,9 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function handles the material id selection.
         """
-        material_id = self.view_of_selected_line.first_entry_in_selection.lstrip("0")
+        material_id = self.view_of_selected_line.first_entry_in_selection
+        material_id = validate_return_id_as_int(material_id)
+
         material = self.mcnp_input.get_material(material_id)
         message = format_notifier_message(material)
         log_debug(self.debug, "Material id selected: {}\n".format(material_id))
@@ -143,6 +140,9 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         # find the selected surfaces in the mcnp input
         selected_surfaces = [ self.mcnp_input.get_surface(int(surface_id)) for surface_id in selected_surface_ids  ] 
         return {"type": "surface_id", "value": format_notifier_message(selected_surfaces)}
+    def is_surface_selected(self):
+        # placeholder for now
+        return True
     
     def analyze_selection(self):
         """
@@ -162,8 +162,10 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
 
         elif self.is_material_id_selected():
             return self._handle_material_id_selected()
+        elif self.is_surface_selected():
+            return self._handle_surfaces_selected()
 
-        return self._handle_surfaces_selected()
+        return False
 
 
 class PhysicsBlockPresenter(AbstractBlockSelectionPresenter):
@@ -231,6 +233,8 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
         Handle the selected transformation.
         """
         transformation_id = self.view_of_selected_line.first_entry_in_selection.lstrip("0")
+        transformation_id = validate_return_id_as_int(transformation_id)
+
         # here should go a logic to return the transformation instance which could be then printed by notifier for now just create transformation instance
         transformation_instance = self.mcnp_input.get_transformation(transformation_id)
         message = format_notifier_message(transformation_instance)
