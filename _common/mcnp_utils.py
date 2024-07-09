@@ -7,8 +7,31 @@ class Printable(object):
     @abstractmethod
     def print_output(self):
         pass
+class Tally(Printable):
+    def __init__(self, tally_id, particles, entries, energies=None, comment=None):
+        assert isinstance(tally_id, int), "tally_id must be an int"
+        self.id = tally_id
+        self.particles = particles
+        self.entries = entries
+        self.energies = energies
+        self.comment = comment
+    def __str__(self):
+        return "Tally%s:%s %s" % (self.id, self.particles, self.entries)
+    def print_output(self):
+        pass
+    def add_comment(self, comment):
+        """
+        Tally comment is often separate keyword Fc so it is nice to have a separate method for this
 
-class transformation(Printable):
+        """
+        self.comment = comment + "\n" + self.comment
+    def add_energy_bins(self, energies):
+        """
+        Add energy bins to the tally instance as they are often also in a separate keyword E
+        """
+        self.energies = energies
+
+class Transformation(Printable):
     def __init__(self, transformation_id, parameters):
         self.transformation_id = transformation_id
         self.parameters = parameters
