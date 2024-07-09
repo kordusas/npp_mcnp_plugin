@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from _common.information import natural_abundances
+from general_utils import validate_return_id_as_int
 import re
 
 class Printable(object):
@@ -31,7 +32,32 @@ class Tally(Printable):
         Add energy bins to the tally instance as they are often also in a separate keyword E
         """
         self.energies = energies
+    @classmethod
+    def create_from_input_line(cls, line, comment=None):
+        # Assumption: line format is "f<number>:<particles> <other entries, >"
+        # Example: "f4:H,He 1 100"
+        
+        # Use re.search safely for tally_id and tally_particles
+        tally_id_match = re.search(r'f(\d+):', line)
+        tally_particles_match = re.search(r':(\S+)', line)
+        
+        if tally_id_match is None or tally_particles_match is None:
+            raise ValueError("Tally Input line format is incorrect.")
+        
+        tally_id = validate_return_id_as_int(tally_id_match.group(1))
+        tally_particles = tally_particles_match.group(1).split(",")
+        
+        # Split line once and extract entries after the first space
+        line_parts = line.split()
+        # Extract entries after the first space, if any
+        tally_entries = line_parts[1:] if len(line_parts) > 1 else []
 
+        # Raise ValueError if tally_entries are empty
+        if not tally_entries:
+            raise ValueError("Tally entries are required but were not provided.")
+        
+        return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment)
+    
 class Transformation(Printable):
     def __init__(self, transformation_id, parameters, comment=None):
         assert isinstance(transformation_id, int), "transformation_id must be an int"
@@ -40,7 +66,6 @@ class Transformation(Printable):
         self.comment = comment
     def __str__(self):
         return "Transformation %s: %s" % (self.transformation_id, self.parameters)
-
     def print_output(self):
         return "Not Implemented"
     
@@ -170,7 +195,7 @@ class Material(Printable):
         match = re.search(r'm(\d+)(.*)', line)
         if not match:
             raise ValueError("Invalid material line format")
-        material_id = int(match.group(1))
+        material_id = validate_return_id_as_int(match.group(1))
         material_instance = cls(material_id, comment)
         # Separate the parameters; they are paired in zzzaaa and abundance, and from that create isotope instances
         parameters = match.group(2).split()
