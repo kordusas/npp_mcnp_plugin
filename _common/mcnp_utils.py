@@ -305,7 +305,7 @@ class ModelMcnpInput(object):
         block_locations = file_parser.block_locations
         transformations = file_parser.get_transformations()
 
-        return cls(surfaces, cells, materials, tallies, physics, block_locations)
+        return cls(surfaces, cells, materials, tallies, physics, block_locations, transformations)
 
     def get_surface(self, surface_id):
         """
@@ -319,11 +319,13 @@ class ModelMcnpInput(object):
         This function returns the cell with the given number.
         """
         pass
+
     def get_material(self, material_id):
         """ 
         This function returns the material with the given number.
+        must return a material instance or string
         """
-        material = Material(name="dummy material", material_id=material_id)
+        material = self.materials.get(material_id, "Material {}: The Machine god doesn't recognize this material".format(material_id))
         return material
     
     def get_tally(self, tally_id):
