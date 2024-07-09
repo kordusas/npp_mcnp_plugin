@@ -307,7 +307,43 @@ class FileParser(object):
         return tallies
 
     def get_physics(self):
-        pass
+        information_dict = {}
+        for line in self.physics_block:
+            if line.startswith("kcode"):
+                # parse source object
+                information_dict['kcode'] = line
+            elif line.startswith("mode"):
+                # parse mode
+                # drop mode and split line according to spaces and commas into a list
+                mode_particle_list = re.sub(r"[,mode]", " ", line)
+                    
+                information_dict['mode'] = mode_particle_list
+
+            elif line.startswith("nps"):
+                # parse nps
+                information_dict['nps'] = int(float(line.split()[1]))
+        return information_dict
+
+    def split_comment_from_line(self, line, comment=""):
+        """
+        Splits the comment from the line and returns the line and comment separately.
+        if comment doesnt exist does nothing
+        Args:
+            line (str): The line to split.
+
+        Returns:
+            line (str): The line without the comment.
+            comment (str): The comment.
+        """
+        comment_new = ""        
+        if "$" in line:
+            line, comment_new = line.split("$", 1)
+
+        # stripping the line  from right side to remove any trailing spaces
+        return line.rstrip(" "), comment + comment_new
+               
+
+
     def get_surfaces(self):
         """
         returns the parsed surface dictionary
