@@ -138,7 +138,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             return None
         log_debug(self.debug, "selected surfaces {}\n".format(selected_surface_ids))
         # find the selected surfaces in the mcnp input
-        selected_surfaces = [ self.mcnp_input.get_surface(int(surface_id)) for surface_id in selected_surface_ids  ] 
+        selected_surfaces = [ self.mcnp_input.get_surface(validate_return_id_as_int(surface_id)) for surface_id in selected_surface_ids  ] 
         return {"type": "surface_id", "value": format_notifier_message(selected_surfaces)}
     def is_surface_selected(self):
         # placeholder for now
