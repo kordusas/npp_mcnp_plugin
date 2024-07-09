@@ -9,6 +9,7 @@ class Printable(object):
     @abstractmethod
     def print_output(self):
         pass
+
 class Tally(Printable):
     def __init__(self, tally_id, particles, entries, energies=None, comment=None):
         assert isinstance(tally_id, int), "tally_id must be an int"
@@ -71,9 +72,23 @@ class Transformation(Printable):
         self.parameters = parameters
         self.comment = comment
     def __str__(self):
-        return "Transformation %s: %s" % (self.transformation_id, self.parameters)
+        return "Transformation %s: %s" % (self.id, self.parameters)
     def print_output(self):
         return "Not Implemented"
+    @classmethod
+    def create_from_input_line(cls, line, comment=None):
+        """
+        creates transformation instance from the line
+        In future may need improvement if we want to initialise the transformation with different parameters:
+        cosine or angles
+        """
+        match = re.search(r'tr(\d+)(.*)', line)
+        id = validate_return_id_as_int(match.group(1))
+        parameters = match.group(2)
+        # if * in line then this is angles and not cosines
+        if "*" in line[0:2]:
+             comment += " Angles transformation "
+        return cls(id, parameters, comment)
     
 # class Surface is a Printable object class that has the following attributes:    
 class Surface(Printable):
@@ -287,8 +302,8 @@ class ModelMcnpInput(object):
         self.cells = cells
         self.materials = materials
         self.tallies = tallies
+        self.transformations = transformations
         self.physics = physics
-        self.get_transformations = transformations
         self.block_locations = block_locations
 
         # add default material
@@ -394,9 +409,8 @@ class ModelMcnpInput(object):
         """
         This function returns the transformation with the given number. currently  a placeholder
         """
-        transformation_instance = Transformation(transformation_id, "transformation parsing not implemented yet")
-
-        return transformation_instance
+        return self.transformations.get(transformation_id, "Transformation {}: The Machine god doesn't recognize this transformation".format(transformation_id))
+    
     def is_line_in_surface_block(self, line_number):
         """
         Determines if the specified line is in the surfaces block.
