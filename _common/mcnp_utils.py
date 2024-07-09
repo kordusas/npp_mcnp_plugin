@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from _common.information import natural_abundances
+import re
 
 class Printable(object):
     __metaclass__ = ABCMeta
@@ -143,6 +144,26 @@ class Material(Printable):
             expanded_isotopes.extend(self.expand_natural_abundance(isotope))
         self.isotopes = expanded_isotopes
 
+    @classmethod
+    def create_from_input_line(cls, line, comment=None):
+        # Find the material id using regex and then separate the material
+        match = re.search(r'm(\d+)(.*)', line)
+        if not match:
+            raise ValueError("Invalid material line format")
+        material_id = int(match.group(1))
+        material_instance = cls(material_id, comment)
+        # Separate the parameters; they are paired in zzzaaa and abundance, and from that create isotope instances
+        parameters = match.group(2).split()
+        for i in range(0, len(parameters), 2):
+            # Parameters[i] need to be split using "." to get the zzzaaa before the library
+            zzzaaa_list = parameters[i].split(".")
+            zzzaaa = int(zzzaaa_list[0])
+            library = zzzaaa_list[1] if len(zzzaaa_list) > 1 else None
+            
+            abundance = float(parameters[i+1])
+            material_instance.add_isotope(Isotope.from_zzzaaa(zzzaaa, abundance, library))
+
+        return material_instance
 
 class Cell(object):
     """
