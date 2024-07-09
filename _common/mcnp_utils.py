@@ -32,9 +32,11 @@ class Tally(Printable):
         self.energies = energies
 
 class Transformation(Printable):
-    def __init__(self, transformation_id, parameters):
-        self.transformation_id = transformation_id
+    def __init__(self, transformation_id, parameters, comment=None):
+        assert isinstance(transformation_id, int), "transformation_id must be an int"
+        self.id = transformation_id
         self.parameters = parameters
+        self.comment = comment
     def __str__(self):
         return "Transformation %s: %s" % (self.transformation_id, self.parameters)
 
