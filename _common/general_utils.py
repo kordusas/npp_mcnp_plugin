@@ -1,7 +1,17 @@
-
 from Npp import console
 
 # Add the format_notifier_message function
+
+def validate_return_id_as_int(id):
+    # Step 1: Validate and Convert material_id
+    if isinstance(id, str):
+        try:
+            id = int(id)
+        except ValueError:
+            # Handle the case where conversion is not possible
+            id = None
+    return id
+
 def format_notifier_message(items_to_show):
     """
     Formats message for the notifier into a string.
