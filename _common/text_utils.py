@@ -9,7 +9,14 @@ def get_char_from_args(args):
     except Exception as e:
         console.write("Error in on_character_added: {}".format(str(e)))
         return None
-    
+
+
+def is_match_at_start(line, regex_pattern):
+    """
+    checks if line starts with a specific regex pattern
+    """
+    return bool(re.match(regex_pattern, line))
+ 
 class ViewOfLine(object):
     """
     This class is used to interact with the current line of the text editor. creates model representation of the line.
