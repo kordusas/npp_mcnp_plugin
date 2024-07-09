@@ -75,23 +75,30 @@ class Surface(Printable):
         return "%s %s %s %s" % (self.id, self.transformation, self.surface_type, self.parameters)
 
 class Isotope(object):
-    def __init__(self, name, z, a, abundance):
+    def __init__(self, name, z, a, abundance, library=None):
         self.name = name
         self.z = z
         self.a = a
         self.abundance = abundance
+        self.comment = ""
+        self.library = library # this is optional library type like .70c .60c etc
 
-    @staticmethod
-    def from_zzzaaa(cls, zzzaaa, abundance):
+    @classmethod
+    def from_zzzaaa(cls, zzzaaa, abundance, library=None):
         z = zzzaaa / 1000
         a = zzzaaa % 1000
         name = cls.get_element_name(z)
-        return cls(name, z, a, abundance)
+        return cls(name, z, a, abundance, library)
 
     @staticmethod
     def get_element_name(z):
         element_names = {6: 'C', 92: 'U', 1: 'H', 2: 'He'}
-        return element_names.get(z, 'Unknown')
+        return element_names.get(z, 'Unknown Element')
+    
+    def add_comment(self, comment):
+        self.comment += comment
+    def __str__(self):
+        return "{:03d} {:03d} {:.3e}".format(self.z, self.a, self.abundance)
 
 
 class Material(Printable):
