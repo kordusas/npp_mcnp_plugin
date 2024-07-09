@@ -106,14 +106,18 @@ class Material(Printable):
     later need to fix the part where both density and atomic density can be present. this cannot be the case.
     """    
 
-    def __init__(self, name, material_id=None):
-        self.name = name
-        self.material_id = material_id
+    def __init__(self, material_id, comment, isotopes=None):
+        assert isinstance(material_id, int), "material_id must be an int"
+        self.id = material_id
+        self.comment = comment
         self.density = None
         self.atomic_density = None
         self.isotopes = []
     def __str__(self):
-        return "Material %s: %s %s" % (self.material_id, self.name, ', '.join([isotope.name for isotope in self.isotopes]))
+        sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
+        isotopes_str = '\n'.join([str(iso) for iso in sorted_isotopes])
+        return "Material {}\nTop 5 Isotopes:\nZ   A   Abundance\n{}".format(self.id, isotopes_str)
+    
     def print_output(self):
 
         if self.density is not None:
