@@ -274,6 +274,23 @@ class FileParser(object):
 
     def get_cells(self):
         pass
+
+    def get_transformations(self):
+        transformations = {}
+        comment = ""
+        for line in self.physics_block:
+            # match one optional "*" which is followed by tr and then at least one digit
+            if is_match_at_start(line, regex_pattern="^(?:\*?tr\d)"):
+                transformation_instance = Transformation.create_from_input_line(line, comment)
+                transformations[transformation_instance.id] = transformation_instance
+                comment = ""
+            elif line.startswith("c"):
+                comment += line
+            else:
+                comment = ""
+
+        return transformations       
+
     def get_materials(self):
         materials = {}
         comment = ""
