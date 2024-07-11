@@ -22,14 +22,13 @@ class ViewOfLine(object):
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
     def __init__(self, debug=True):
-        self.selected_text = editor.getSelText().lower()
         self.debug = debug
         self._initialize_view_properties()
         
     def _initialize_view_properties(self):
-        self.selected_text = editor.getSelText().lower()
-        self.selection_start = editor.getSelectionStart()
-        self.selection_end = editor.getSelectionEnd()
+        self.selected_text = self.selected_text = editor.getSelText().lower().split("imp")[0].strip()
+        self.selection_start = editor.getColumn(editor.getSelectionStart())
+        self.selection_end = editor.getColumn(editor.getSelectionEnd())
         self.cursor_column = editor.getColumn(editor.getCurrentPos())
         self.current_line_no = editor.lineFromPosition(editor.getCurrentPos())
         self.current_line = self._get_line_without_comment(self.current_line_no)
@@ -71,7 +70,10 @@ class ViewOfLine(object):
 
     @property
     def is_continuation_line(self):
-        return self.current_line.startswith('    ')
+        return self._is_continuation(self.current_line)
+    
+    def _is_continuation(self, line):
+        return line.startswith('    ')    
     @property
     def is_empty_line(self):
         return self.current_line.strip() == ""  
@@ -154,9 +156,27 @@ class ViewOfLine(object):
 
     def _get_previous_line(self, line_offset):
         return self._get_line_without_comment(self.current_line_no - line_offset)
+        
+    def find_space_separated_token_end_positions(self, token_index):
+        """
+        Finds the position immediately after the first character of a specified space-separated token in a string.
 
-    def _is_continuation(self, line):
-        return line.startswith('    ')
+        This method identifies positions in the string where a space separates two alphanumeric or special character tokens
+        (e.g., '+', '-', '*', '/', '(', ')'). It returns the position immediately after the first character of the specified
+        space-separated token, based on a 0-indexed token_index.
+
+        Parameters:
+        - token_index (int): The index of the token for which to find the end position, where indexing starts at 0.
+
+        Returns:
+        - int: The position immediately after the first character of the specified space-separated token.
+        """
+        pattern = r'([a-zA-Z0-9+\-*/()])(\s+)([a-zA-Z0-9+\-*/()])'
+        matches = re.finditer(pattern, self.current_line)
+        # As this returns the end o
+        end_positions = [match.start()+1 for match in matches]
+        return end_positions[token_index] if token_index < len(end_positions) else None
+
     
 
 
