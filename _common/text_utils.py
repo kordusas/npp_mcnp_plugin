@@ -68,12 +68,21 @@ class ViewOfLine(object):
         """
         return any(char.isalpha() for char in self.text_till_cursor)
 
-    @property
-    def is_continuation_line(self):
-        return self._is_continuation(self.current_line)
+    def is_continuation_line(self, line_number=0):
+        """
+        answers if current line is a continuation line or not
+        takes argument the line number of the line to check
+
+        two cases when it is a continuation line:
+        - line starts with at least 4 spaces
+        - previous line ends with & character
+        """
+        line = self._get_line_without_comment(line_number)
+        if line.startswith('    '):
+            return True
+        previous_line = self._get_line_without_comment(line_number - 1)
+        return previous_line.endswith('&')
     
-    def _is_continuation(self, line):
-        return line.startswith('    ')    
     @property
     def is_empty_line(self):
         return self.current_line.strip() == ""  
@@ -146,13 +155,13 @@ class ViewOfLine(object):
             except IndexError:
                 break
 
-            if not self._is_continuation(previous_line):
+            if not self.is_continuation_line(self.current_line_no-line_offset):
                 break
 
             full_line_parts.insert(0, previous_line.rstrip())
             line_offset += 1
 
-        return ''.join(full_line_parts)
+        return ''.join(full_line_parts).strip("&")
 
     def _get_previous_line(self, line_offset):
         return self._get_line_without_comment(self.current_line_no - line_offset)
