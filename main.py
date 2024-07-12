@@ -20,12 +20,11 @@ class editorHandler:
         # initialisng parser instance from file cls method 
         self._initialise_parser_and_mcnp_input()
         
-        
-
     def register_callbacks(self):
         editor.clearCallbacks([SCINTILLANOTIFICATION.UPDATEUI])
         editor.callbackSync(self.on_select, [SCINTILLANOTIFICATION.UPDATEUI])
         editor.callbackSync(self.on_character_added, [SCINTILLANOTIFICATION.CHARADDED])
+        notepad.callback(self.on_document_saved, [NOTIFICATION.FILESAVED])
         pass
 
     def _initialise_parser_and_mcnp_input(self):
@@ -34,6 +33,10 @@ class editorHandler:
         """
         self.parsed_file = FileParser.from_file(notepad.getCurrentFilename())
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
+        
+    def on_document_saved(self, args):
+        self._initialise_parser_and_mcnp_input()
+        log_debug(self.debug, "Document saved\n")
 
     def on_select(self, args):
         # if the selection arguments are not updated
@@ -65,6 +68,7 @@ class editorHandler:
                 # 
                 log_debug(self.debug, "None space character added\n")
                 self.handle_non_space_character(char_added)
+
     def handle_non_space_character(self, char_added):
         current_line_instance = ViewOfLine(debug=self.debug)
         if  current_line_instance.is_comment_line:
