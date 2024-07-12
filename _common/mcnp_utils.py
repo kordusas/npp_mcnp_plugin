@@ -46,22 +46,27 @@ class Tally(Printable):
         
         # Use re.search safely for tally_id and tally_particles
         tally_id_match = re.search(r'f(\d+):', line)
+        tally_id = validate_return_id_as_int(tally_id_match.group(1))
+        if tally_id_match is None:
+            raise ValueError("Tally Input line format is incorrect: tally id is missing.")
+        
         tally_particles_match = re.search(r':(\S+)', line)
         
-        if tally_id_match is None or tally_particles_match is None:
-            raise ValueError("Tally Input line format is incorrect.")
+        if  tally_particles_match is None:
+            raise ValueError("Tally {0} particle designator is not provided.".format(tally_id)) 
         
-        tally_id = validate_return_id_as_int(tally_id_match.group(1))
+        
         tally_particles = tally_particles_match.group(1).split(",")
         
         # Split line once and extract entries after the first space
         line_parts = line.split()
+        # Raise ValueError if tally_entries are empty
+        if len(line_parts) <2:
+            raise ValueError("Tally {0} entries are required but were not provided.".format(tally_id))        
         # Extract entries after the first space, if any
         tally_entries = line_parts[1:] if len(line_parts) > 1 else []
 
-        # Raise ValueError if tally_entries are empty
-        if not tally_entries:
-            raise ValueError("Tally entries are required but were not provided.")
+        
         
         return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment)
     
@@ -214,8 +219,8 @@ class Material(Printable):
     def create_from_input_line(cls, line, comment=None):
         """
         Class method to create a Material instance from an input line.
-        Assumes :
-            the input line contains all of the information about the material. 
+        Assumes:
+            the input line contains all of the information about the material.
             input line is all lower case and no comments are present in the line.
         """
         # Find the material id using regex and then separate the material
@@ -226,13 +231,19 @@ class Material(Printable):
         material_instance = cls(material_id, comment)
         # Separate the parameters; they are paired in zzzaaa and abundance, and from that create isotope instances
         parameters = match.group(2).split()
+        if len(parameters) % 2 != 0:
+            raise ValueError("uneven amount of entries for material {0}".format(material_id))
         for i in range(0, len(parameters), 2):
             # Parameters[i] need to be split using "." to get the zzzaaa before the library
             zzzaaa_list = parameters[i].split(".")
             zzzaaa = int(zzzaaa_list[0])
             library = zzzaaa_list[1] if len(zzzaaa_list) > 1 else None
             
-            abundance = float(parameters[i+1])
+            try:
+                abundance = float(parameters[i+1])
+            except ValueError:
+                raise ValueError("Abundance for isotope {0} in material {1} is missing or not a valid number".format(zzzaaa, material_id))
+                continue  # This continue is syntactically incorrect here as it's within the except block
             material_instance.add_isotope(Isotope.from_zzzaaa(zzzaaa, abundance, library))
 
         return material_instance
