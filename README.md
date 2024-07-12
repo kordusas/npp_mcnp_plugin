@@ -6,7 +6,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 
 ## Features
 
-### Generative Methods (Planned)
+### Generative Methods
 - **Status**: Planned 
 - **Description**: impement generative methods to simplify MCNP input writting. 
   - implement command to auto generate basic input structure, for example \generate input creates all basic blocks of MCNP input 
@@ -59,6 +59,12 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 After installation, the plugin can be accessed via the `plugins -> PythonScript -> scripts ` menu in Notepad++. 
 
 One can set up the shortcuts to the script following the advise in the discussion: https://community.notepad-plus-plus.org/topic/14703/run-python-script-pythonscript-plugin-with-a-shortcut/3
+
+## Examples 
+
+Notification on cell block and surface block information. 
+![](selection_notification_example.gif)
+
 
 ## Structure and Interaction
 
