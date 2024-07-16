@@ -31,7 +31,7 @@ class editorHandler:
         """
         parse the file and create the mcnp input instance.
         """
-        self.parsed_file = FileParser.from_file(notepad.getCurrentFilename())
+        self.parsed_file = FileParser.from_file(notepad.getCurrentFilename(), debug=self.debug)
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
         
     def on_document_saved(self, args):
@@ -80,6 +80,6 @@ class editorHandler:
 
 if __name__ == "__main__":
     notifier = SelectionNotification()
-    handler = editorHandler(notifier, debug=True)
+    handler = editorHandler(notifier, debug=False)
     handler.register_callbacks()
     
