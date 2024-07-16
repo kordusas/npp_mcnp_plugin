@@ -168,7 +168,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             return None
         elif self.is_cell_like_but_format():
             return None        
-        elif self.view_of_selected_line.is_continuation_line:
+        elif self.view_of_selected_line.is_continuation_line(self.view_of_selected_line.current_line_no):
             log_debug(self.debug, "Continuation line\n")
             return self._handle_surfaces_selected()
 
