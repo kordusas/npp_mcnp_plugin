@@ -14,7 +14,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
   -  
 
 ### Autocomplete 
-- **Status**: (Planned)
+- **Status**: Planned
 - **Description**: A future enhancement to introduce an autocomplete feature that suggests MCNP keywords and parameters as you type. This aims to boost productivity by offering real-time suggestions and minimizing syntax errors. The feature will be context-aware, providing suggestions based on the specific block you are working in:
   - **In Cell Block**:
     - Suggest autocomplete surface ID during typing from the available surface dictionary. 
@@ -33,14 +33,14 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 - **Status**: Partially Implemented
 - **Description**: For cell blocks, 
 - selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model. (need cell parsing)
-- Selecting the material popups info about the material. (need material parsing)
+- Selecting the material popups info about the material. (completed)
 - selecting surfaces popups information about the selected surfaces. (completed)
 
 #### Surfaces Block Information
 - **Status**: Partially Implemented
 - **Description**: 
   - selecting a surface type provides information about that type. Only part of surface types have description currently. Future updates will expand this feature to offer comprehensive details on all surface interactions. (started, need to complete all descriptions)
-  - selecting the transformation popups info about that trcl (started, need to parse trcl)
+  - selecting the transformation popups info about that trcl (completed)
 
 #### Physics Block Information (Planned)
 - **Status**: Planned
