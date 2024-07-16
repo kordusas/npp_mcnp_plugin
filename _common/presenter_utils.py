@@ -168,7 +168,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             return None
         elif self.is_cell_like_but_format():
             return None        
-        elif self.view_of_selected_line.is_continuation_line:
+        elif self.view_of_selected_line.is_continuation_line(self.view_of_selected_line.current_line_no):
             log_debug(self.debug, "Continuation line\n")
             return self._handle_surfaces_selected()
 
@@ -225,7 +225,7 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
             bool: True if the selected line is a transformation, False otherwise.
         """
         log_debug(self.debug, "Called method is_selection_a_transformation\n")
-        if self.view_of_selected_line.is_continuation_line:
+        if self.view_of_selected_line.is_continuation_line(self.view_of_selected_line.current_line_no):
             return False
         elif self.view_of_selected_line.has_non_digit_chars_before_cursor:
             return False
