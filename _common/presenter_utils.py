@@ -21,11 +21,19 @@ class AbstractBlockSelectionPresenter(object):
     __metaclass__ = ABCMeta  # This makes it an abstract class in Python 2.7
 
     def __init__(self, view_of_current_line, mcnp_input, notifier, debug=True):
+        """
+        Initialize the block presenter with the given view of the current line, MCNP input, notifier, and debug flag.
+
+        Args:
+            view_of_current_line (ViewOfCurrentLine): The view of the current line containing the selected text.
+            mcnp_input (MCNPIO): The MCNP input object
+            notifier (Notifier): The notifier object responsible for displaying messages to the user.
+            debug (bool, optional): A flag indicating whether debugging information should be logged. Defaults to True.
+        """
         self.view_of_selected_line = view_of_current_line
         self.mcnp_input = mcnp_input
         self.notifier = notifier
         self.debug = debug
-        
 
     
     def notify_selection(self):
