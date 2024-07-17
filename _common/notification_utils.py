@@ -1,6 +1,5 @@
     
 from Npp import editor
-from information import surface_info
 
 class SelectionNotification():
     """
@@ -27,9 +26,21 @@ class SelectionNotification():
         if isinstance(message, str):
             editor.callTipShow(editor.getSelectionEnd(), message)
         else:
-            editor.callTipShow(editor.getSelectionEnd(), "wrong message type {}\n".format(type(message)))
+            editor.callTipShow(editor.getSelectionEnd(), "wrong message type: {}\n".format(type(message)))
+
 
     def notify(self, analysis_result):
+        """
+        This method is responsible for notifying the user about the selected text based on the provided analysis result.
+
+        :param analysis_result: A dictionary containing the type and value of the selected text.
+        :type analysis_result: dict
+
+        The function first extracts the 'type' and 'value' from the 'analysis_result' dictionary. If the 'value' is not empty, it calls the '_popup_notification' method to display a notification message to the user. The message is derived from the 'value' field of the 'analysis_result' dictionary.
+
+        :return: None
+        :rtype: None
+        """        
         action_type = analysis_result.get("type")
         value = analysis_result.get("value")
         if value:
