@@ -37,12 +37,12 @@ class editorHandler:
         """
         self.logger.info("Initialising parser and Mcnp input")
 
-        self.parsed_file = FileParser.from_file(notepad.getCurrentFilename(), self.error_collection)
+        self.parsed_file = FileParser.from_file(notepad.getCurrentFilename(), self.mcnp_error_collection)
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
         
-        self.logger.debug("Parsing errors: %s", self.error_collection)
+        self.logger.debug("Parsing errors: %s", self.mcnp_error_collection)
         
-        self.error_notifier.notify(self.error_collection)
+        self.error_notifier.notify(self.mcnp_error_collection)
 
     def on_document_saved(self, args):
         self.logger.info("Document saved")
