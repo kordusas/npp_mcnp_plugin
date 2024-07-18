@@ -321,7 +321,7 @@ class FileParser(object):
                 transformations[transformation_instance.id] = transformation_instance
                 comment = ""
             elif line.startswith("c"):
-                comment += line
+                comment += re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip())
             else:
                 comment = ""
 
@@ -334,11 +334,10 @@ class FileParser(object):
             if  is_match_at_start(line, regex_pattern= 'm(\d+)(.*)'):
                 self.logger.debug( "Material text: {}\nMaterial comment: {}\n".format(line, comment))
                 material_instance = Material.create_from_input_line(line,  comment)
-                log_debug(self.debug, "Material instance: {}\n".format(material_instance))
                 materials[material_instance.id] = material_instance
                 comment = ""
             elif line.startswith("c"):
-                comment += line
+                comment += re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip())
             else:
                 comment = ""
 
@@ -358,7 +357,7 @@ class FileParser(object):
                 tallies[tally_instance.id] = tally_instance
                 comment = ""
             elif line.startswith("c"):
-                comment += line
+                comment += re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip())
             else:
                 comment = ""
 
@@ -433,29 +432,38 @@ class FileParser(object):
         Returns:
             surface (Surface): The parsed `Surface` object.
         """
-        surface_data = line.split("$")
-        comment = ""
-        if len(surface_data) >= 2:
-            comment = surface_data[1].strip()
-        
-        surface_data = surface_data[0].split()
-        if len(surface_data) >= 3:
-            surface_id = surface_data[0]
-            if surface_data[1].isdigit():
-                surface_transform = surface_data[1]
-                surface_type = surface_data[2]
-                surface_params = ' '.join(surface_data[3:])
-            else:
-                surface_transform = None
-                surface_type = surface_data[1]
-                surface_params = ' '.join(surface_data[2:])
-            surface = Surface(int(surface_id), surface_type, surface_params, comment, surface_transform)
-            console.write("Surface parsed: {}\n".format(surface_id))
-        else:
-            console.write("Error parsing surface: {}\n".format(line))
-            surface = None
-        return surface
-       
+        try:
+            surface_data = line.split("$")
+            if len(surface_data) >= 2:
+                comment = surface_data[1].strip()
+
+            surface_data = surface_data[0].split()
+            if len(surface_data) < 1:
+                raise ValueError("Surface ID is missing")
+
+            surface_id = int(surface_data[0])
+            surface_transform = None
+            surface_type = None
+            surface_params = ""
+
+            if len(surface_data) >= 2:
+                if surface_data[1].isdigit():
+                    surface_transform = surface_data[1]
+                    if len(surface_data) >= 3:
+                        surface_type = surface_data[2]
+                        surface_params = ' '.join(surface_data[3:])
+                else:
+                    surface_type = surface_data[1]
+                    surface_params = ' '.join(surface_data[2:])
+
+            surface = Surface(surface_id, surface_type, surface_params, comment, surface_transform)
+            self.logger.info("Surface parsed: %d", surface_id)
+            return surface
+
+        except Exception as e:
+            self.logger.error("Error parsing surface: %s\nException: %s", line, str(e))
+            return Surface(surface_id, surface_type, surface_params, comment, surface_transform)
+
     def analyse_file(self):
         self.set_header_flag()
         self.set_block_locations()
