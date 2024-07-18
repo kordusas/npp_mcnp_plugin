@@ -1,6 +1,6 @@
 from Npp import editor, console
 from mcnp_utils import Surface, Tally, Transformation, Material
-from general_utils import log_debug
+from error_handling import InputValidator, ErrorCollection, ErrorView, ErrorModel
 import re
 import logging
 def get_char_from_args(args):
@@ -21,7 +21,7 @@ class ViewOfLine(object):
     """
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
-    def __init__(self, debug=True):
+    def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self._initialize_view_properties()
         
@@ -193,8 +193,10 @@ class ViewOfLine(object):
 
 
 class FileParser(object):
-    def __init__(self,filename, debug=True):
+    def __init__(self, filename, error_collection):
         self.filename = filename
+        self.validator = InputValidator()
+        self.error_collection = error_collection
         self.lines = None
         self.message_block = None
         self.cells_block = None
@@ -342,6 +344,11 @@ class FileParser(object):
         for line in self.physics_block:
             if  is_match_at_start(line, regex_pattern= '^f\d+:'):
                 tally_instance = Tally.create_from_input_line(line,  comment)
+
+                error_message = self.validator.validate_tally(tally_instance)
+                if error_message:
+                    self.error_collection.add_error(ErrorModel(line, error_message))
+
                 tallies[tally_instance.id] = tally_instance
                 comment = ""
             elif line.startswith("c"):
@@ -447,6 +454,7 @@ class FileParser(object):
         self.set_header_flag()
         self.set_block_locations()
         self.parse()
+        
 
     def read_new_file(self, file_path):
         self.filename = file_path
@@ -464,17 +472,17 @@ class FileParser(object):
             self.logger.exception("Error reading file: {}\n".format(str(e))) 
         
     @classmethod
-    def from_file(cls, file_path, debug=True):
+    def from_file(cls, file_path, error_collection):
         """
         Class method to create an instance of FileParser from a file path.
         """
-        instance = cls(file_path)
+        instance = cls(file_path, error_collection)
 
-        instance.debug = debug
+        
         instance.read_file()
         instance.analyse_file()
         instance.logger.info("FileParser created from file: %s", file_path)  
-        
+
         return instance
  
         
