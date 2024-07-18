@@ -235,7 +235,7 @@ class FileParser(object):
         self.block_locations['surfaces'] = {'start': block_start_indices[1], 'end': block_start_indices[2]}
         self.block_locations['physics'] = {'start': block_start_indices[2], 'end': len(self.lines)}
                 
-        return 0
+        return 
     def parse_header(self, line_no):
         self.message_block = self.lines[:line_no]
 
@@ -278,20 +278,16 @@ class FileParser(object):
 
             # formatting the line and comment
             line, comment = self.split_comment_from_line(line, comment)
-
-            # remove continue line character at the end of line
-            line = line.rstrip('&')
-            
+           
             if line.strip() == "":
                 continue
             # if lines starts with less than 4 spaces then remove them
             elif len(line) - len(line.lstrip(' ')) < 4:
                 line = line.lstrip(' ')
 
-
             # merging the continuation lines
-            if line.startswith("    "):
-                merged_block[-1] += line
+            if line.startswith("    ") or merged_block[-1].endswith('&'):
+                merged_block[-1] = merged_block[-1].rstrip('&') + line
             else:
                 merged_block.append(line) # Add the current line to merged_block
                 if comment:
