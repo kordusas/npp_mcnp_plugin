@@ -67,7 +67,10 @@ class ViewOfLine(object):
         Checks if there are non-digit characters before the cursor in the current line.
         """
         return any(char.isalpha() for char in self.text_till_cursor)
-
+    @property
+    def is_current_line_continuation_line(self):
+        return self.is_continuation_line(self.current_line_no)
+    
     def is_continuation_line(self, line_number=0):
         """
         answers if current line is a continuation line or not
