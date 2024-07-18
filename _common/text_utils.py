@@ -234,8 +234,8 @@ class FileParser(object):
         
         # +2 because first line is always a title
         self.block_locations['cells'] = {'start': block_start_indices[0]+1, 'end': block_start_indices[1]}
-        self.block_locations['surfaces'] = {'start': block_start_indices[1], 'end': block_start_indices[2]}
-        self.block_locations['physics'] = {'start': block_start_indices[2], 'end': len(self.lines)}
+        self.block_locations['surfaces'] = {'start': block_start_indices[1]+1, 'end': block_start_indices[2]}
+        self.block_locations['physics'] = {'start': block_start_indices[2]+1, 'end': len(self.lines)}
                 
         return 
     def parse_header(self, line_no):
@@ -245,8 +245,8 @@ class FileParser(object):
         self.title = self.lines[self.block_locations['cells']['start']-1]
     def parse_blocks(self):
         self.cells_block = self.format_blocks(self.lines[self.block_locations['cells']['start']:self.block_locations['cells']['end']])
-        self.surfaces_block = self.format_blocks(self.lines[self.block_locations['surfaces']['start'] + 1:self.block_locations['surfaces']['end']])
-        self.physics_block = self.format_blocks(self.lines[self.block_locations['physics']['start'] + 1:])
+        self.surfaces_block = self.format_blocks(self.lines[self.block_locations['surfaces']['start']:self.block_locations['surfaces']['end']])
+        self.physics_block = self.format_blocks(self.lines[self.block_locations['physics']['start']:])
 
     def parse(self):
         """
