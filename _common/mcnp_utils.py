@@ -115,7 +115,6 @@ class Transformation(Printable):
     
 # class Surface is a Printable object class that has the following attributes:    
 class Surface(Printable):
-    ALLOWED_SURFACE_TYPES = ['box', 'rpp', 'sph', 'rcc', 'rhp', 'rec', 'trc', 'ell', 'wed', 'arb', 'px', 'py', 'pz', 'so', 's', 'sx', 'sy', 'sz', 'c/x', 'c/y', 'c/z', 'cx', 'cy', 'cz', 'k/x', 'k/y', 'k/z', 'kx', 'ky', 'kz', 'sq', 'gq', 'tx', 'ty', 'tz', 'x', 'y', 'z', 'p']
 
     def __init__(self, surface_id, surface_type, parameters, comment, transformation=None):
         assert isinstance(surface_id, int), "surface_id must be an int"
@@ -124,9 +123,6 @@ class Surface(Printable):
         self.transformation = transformation
         self.parameters = parameters
         self.comment = comment
-
-        if self.surface_type not in self.ALLOWED_SURFACE_TYPES:
-            raise ValueError("Invalid surface type. surface type: %s are not allowed" % ', '.join(self.surface_type))
 
     def update_surface(self, new_surface_id, new_parameters):
         self.id = new_surface_id
@@ -139,6 +135,7 @@ class Surface(Printable):
             return "Surface %s: %s %s  tr: %s" % (self.id, self.surface_type, self.parameters, self.transformation)
         else:
             return "Surface %s: %s %s " % (self.id, self.surface_type, self.parameters)
+        
     def print_output(self):
         if not self.transformation:
             return "%s %s %s" % (self.id, self.surface_type, self.parameters)
