@@ -11,7 +11,7 @@ class Printable(object):
         pass
 
 class Tally(Printable):
-    def __init__(self, tally_id, particles, entries, energies=None, comment=None):
+    def __init__(self, tally_id, particles=None, entries=None, energies=None, comment=None):
         assert isinstance(tally_id, int), "tally_id must be an int"
         self.id = tally_id
         self.particles = particles
@@ -33,6 +33,38 @@ class Tally(Printable):
         Add energy bins to the tally instance as they are often also in a separate keyword E
         """
         self.energies = energies
+    @staticmethod
+    def get_f6_tally_data_from_line( line):
+        """
+        This method returns a Tally instance created from the given line.
+        """
+        # Assumption: line format is "f<number> <other entries, >"
+        # Example: "f6 1 100"
+        
+        tally_particles = "Not Applicable"
+        entries = None
+
+        return tally_particles, entries 
+    @staticmethod
+    def get_tally_data_from_line(line):
+        tally_particles_match = re.search(r':(\S+)', line)
+        
+        if  tally_particles_match is None:
+            return None, None
+        
+        
+        tally_particles = tally_particles_match.group(1).split(",")
+        
+        # Split line once and extract entries after the first space
+        line_parts = line.split()
+        # Raise ValueError if tally_entries are empty
+        if len(line_parts) <2:
+            return tally_particles, None
+        # Extract entries after the first space, if any
+        tally_entries = line_parts[1:] if len(line_parts) > 1 else []
+
+        return tally_particles, tally_entries
+        
     @classmethod
     def create_from_input_line(cls, line, comment=None):
         """
