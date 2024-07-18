@@ -1,4 +1,5 @@
 from Npp import console
+import logging
 
 # Add the format_notifier_message function
 
@@ -37,4 +38,8 @@ def log_debug(debug, message):
     if debug:
         console.write(message)
 
-        
+
+def configure_logging(enable_logging=True):
+    logging_level = logging.DEBUG if enable_logging else logging.CRITICAL
+    logging.basicConfig(level=logging_level)
+
