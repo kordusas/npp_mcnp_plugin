@@ -2,7 +2,7 @@ from Npp import editor, console
 from mcnp_utils import Surface, Tally, Transformation, Material
 from general_utils import log_debug
 import re
-
+import logging
 def get_char_from_args(args):
     try:
         return chr(args['ch'])
@@ -22,7 +22,7 @@ class ViewOfLine(object):
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
     def __init__(self, debug=True):
-        self.debug = debug
+        self.logger = logging.getLogger(self.__class__.__name__)
         self._initialize_view_properties()
         
     def _initialize_view_properties(self):
@@ -124,7 +124,7 @@ class ViewOfLine(object):
             1. If the keyword 'fill' is present in the current line and the selection start position is after the 'fill' keyword, the line is considered a lattice line.
             2. If the current line is a continuation line (starts with four spaces)  the text from the previous line(s) is prepended to the current line until a non-continuation line is encountered. If the resulting text contains the keyword 'fill', the line is considered a lattice line.
         """
-        log_debug(self.debug, "Called method is_lattice_line\n")
+        self.logger.debug("Called method is_lattice_line\n")
         full_line = self.get_full_mcnp_input_line()
         if "fill" in self.current_line:
             fill_index = self.current_line.find("fill")
@@ -203,7 +203,7 @@ class FileParser(object):
         self.has_header = False
         self.block_locations = {}
         self.title  = ""
-        self.debug = debug
+        self.logger = logging.getLogger(self.__class__.__name__)
          
     def set_header_flag(self):
         # Determine if we have a header block
@@ -216,7 +216,7 @@ class FileParser(object):
         Returns:
             block_locations (dict): The start and end lines of each block.
         """
-        log_debug(True, "Finding blocks...\n")
+        self.logger.info("Called method set_block_locations...\n")
 
         block_start_indices = []
         
@@ -255,9 +255,9 @@ class FileParser(object):
         self.parse_blocks()
         self.parse_title()
 
-        console.write("Cells block: {}\nSurfaces block: {}\nPhysics block: {}\n".format(
+        self.logger.info("Cells block: %d\nSurfaces block: %d\nPhysics block: %d\n",
             len(self.cells_block), len(self.surfaces_block), len(self.physics_block)
-        ))
+        )
 
     def format_blocks(self, block):
         """
@@ -324,7 +324,7 @@ class FileParser(object):
         comment = ""
         for line in self.physics_block:
             if  is_match_at_start(line, regex_pattern= 'm(\d+)(.*)'):
-                log_debug(self.debug, "Material text: {}\n Material comment: {}\n".format(line, comment))
+                self.logger.debug( "Material text: {}\nMaterial comment: {}\n".format(line, comment))
                 material_instance = Material.create_from_input_line(line,  comment)
                 log_debug(self.debug, "Material instance: {}\n".format(material_instance))
                 materials[material_instance.id] = material_instance
@@ -461,7 +461,7 @@ class FileParser(object):
             with open(self.filename, 'r') as file:
                 self.lines = [line.lower() for line in file.readlines()]
         except Exception as e:
-            log_debug(True, "Error reading file: {}\n".format(str(e))) 
+            self.logger.exception("Error reading file: {}\n".format(str(e))) 
         
     @classmethod
     def from_file(cls, file_path, debug=True):
@@ -473,8 +473,7 @@ class FileParser(object):
         instance.debug = debug
         instance.read_file()
         instance.analyse_file()
-        
-        log_debug(True,"Parsed {} lines from file: {}\n".format(len(instance.lines), file_path) )  
+        instance.logger.info("FileParser created from file: %s", file_path)  
         
         return instance
  
