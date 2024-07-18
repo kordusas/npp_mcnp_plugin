@@ -79,27 +79,13 @@ class Tally(Printable):
         # Use re.search safely for tally_id and tally_particles
         tally_id_match = re.search(r'f(\d+):', line)
         tally_id = validate_return_id_as_int(tally_id_match.group(1))
-        if tally_id_match is None:
-            raise ValueError("Tally Input line format is incorrect: tally id is missing.")
         
-        tally_particles_match = re.search(r':(\S+)', line)
-        
-        if  tally_particles_match is None:
-            raise ValueError("Tally {0} particle designator is not provided.".format(tally_id)) 
-        
-        
-        tally_particles = tally_particles_match.group(1).split(",")
-        
-        # Split line once and extract entries after the first space
-        line_parts = line.split()
-        # Raise ValueError if tally_entries are empty
-        if len(line_parts) <2:
-            raise ValueError("Tally {0} entries are required but were not provided.".format(tally_id))        
-        # Extract entries after the first space, if any
-        tally_entries = line_parts[1:] if len(line_parts) > 1 else []
+        # if tally id ends with 6 it is special tally
+        if tally_id % 10 == 6:
+            tally_particles, tally_entries = cls.get_f6_tally_data_from_line(line)
+        else:
+            tally_particles, tally_entries = cls.get_tally_data_from_line(line)
 
-        
-        
         return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment)
     
 class Transformation(Printable):
