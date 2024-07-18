@@ -17,7 +17,7 @@ class editorHandler:
     def __init__(self, selection_notifier, error_notifier, autocomplete_notifier):
         self.selection_notifier = selection_notifier
         self.error_notifier = error_notifier
-        self.error_collection = ErrorCollection()
+        self.mcnp_error_collection = ErrorCollection()
         self.autocomplete_notifier = autocomplete_notifier
         self.logger = logging.getLogger(self.__class__.__name__)
         
