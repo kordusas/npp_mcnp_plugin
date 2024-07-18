@@ -277,28 +277,34 @@ class FileParser(object):
         for  line in block:
             # strip the continuation sign which may be present in some cases but not all
             line = line.rstrip('\n')
-
+            if line.strip() == "":
+                continue
             # formatting the line and comment
             line, comment = self.split_comment_from_line(line, comment)
            
-            if line.strip() == "":
-                continue
+            
             # if lines starts with less than 4 spaces then remove them
-            elif len(line) - len(line.lstrip(' ')) < 4:
-                line = line.lstrip(' ')
+            line = self._remove_leading_spaces(line)
 
             # merging the continuation lines
-            if line.startswith("    ") or merged_block[-1].endswith('&'):
+            if not merged_block:
+                self._add_new_line(merged_block, line, comment)
+                comment = ""
+            elif line.startswith("    ") or merged_block[-1].endswith('&'):
                 merged_block[-1] = merged_block[-1].rstrip('&') + line
             else:
-                merged_block.append(line) # Add the current line to merged_block
-                if comment:
-                    # insert this comment as one before the last element
-                    merged_block.insert(-2, "c " + comment.strip() + "\n")
-                    comment = ""  # Reset comment after inserting
+                self._add_new_line(merged_block, line, comment)
+                comment = ""
 
         return merged_block
-    
+    def _remove_leading_spaces(self, line):
+        if len(line) - len(line.lstrip(' ')) < 4:
+            return line.lstrip(' ')
+        return line
+    def _add_new_line(self, merged_block, line, comment):
+        merged_block.append(line)
+        if comment:
+            merged_block.insert(-2, "c " + comment.strip() + "\n")    
     def _parse_cell(self):
         pass
 
