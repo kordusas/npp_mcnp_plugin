@@ -203,9 +203,14 @@ class ViewOfLine(object):
 
 
 class FileParser(object):
-    def __init__(self, filename, error_collection):
+    def __init__(self, filename, error_collection, validator=None):
         self.filename = filename
-        self.validator = InputValidator()
+        # can use different validator in case there is such
+        if validator is None:
+            self.validator = InputValidator()
+        else:
+            self.validator = validator
+
         self.error_collection = error_collection
         self.lines = None
         self.message_block = None
@@ -321,57 +326,57 @@ class FileParser(object):
     def get_cells(self):
         pass
 
-    def get_transformations(self):
-        transformations = {}
+    def _parse_block(self, regex_pattern, create_instance_func, validate_func=None):
+        """
+        Generic method to parse a block of lines based on a regex pattern and create instances using a provided function.
+
+        Args:
+            regex_pattern (str): The regex pattern to match lines.
+            create_instance_func (function): The function to create an instance from a line and comment.
+            validate_func (function, optional): The function to validate the created instance. Defaults to None.
+
+        Returns:
+            dict: A dictionary of parsed instances indexed by their ID.
+        """
+        parsed_items = {}
         comment = ""
         for line in self.physics_block:
-            # match one optional "*" which is followed by tr and then at least one digit
-            if is_match_at_start(line, regex_pattern="^(?:\*?tr\d)"):
-                transformation_instance = Transformation.create_from_input_line(line, comment)
-                transformations[transformation_instance.id] = transformation_instance
+            if is_match_at_start(line, regex_pattern=regex_pattern):
+                instance = create_instance_func(line, comment)
+                self.logger.debug("Created instance: %s", instance)
+                if validate_func:
+                    error_message = validate_func(instance)
+                    if error_message:
+                        self.error_collection.add_error(ErrorModel(line, error_message))
+                parsed_items[instance.id] = instance
                 comment = ""
             elif line.startswith("c"):
-                comment += re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip())
+                comment += " " + re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip("||").strip())
             else:
                 comment = ""
+        return parsed_items
 
-        return transformations       
+    def get_transformations(self):
+        self.logger.debug("Parsing transformations")
+        return self._parse_block(
+            regex_pattern="^(?:\*?tr\d)",
+            create_instance_func=Transformation.create_from_input_line
+        )
 
     def get_materials(self):
-        materials = {}
-        comment = ""
-        for line in self.physics_block:
-            if  is_match_at_start(line, regex_pattern= 'm(\d+)(.*)'):
-                self.logger.debug( "Material text: {}\nMaterial comment: {}\n".format(line, comment))
-                material_instance = Material.create_from_input_line(line,  comment)
-                materials[material_instance.id] = material_instance
-                comment = ""
-            elif line.startswith("c"):
-                comment += re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip())
-            else:
-                comment = ""
-
-        return materials
+        self.logger.debug("Parsing materials")
+        return self._parse_block(
+            regex_pattern='m(\d+)(.*)',
+            create_instance_func=Material.create_from_input_line
+        )
 
     def get_tallies(self):
-        tallies = {}
-        comment = ""
-        for line in self.physics_block:
-            if  is_match_at_start(line, regex_pattern= '^f\d+:'):
-                tally_instance = Tally.create_from_input_line(line,  comment)
-
-                error_message = self.validator.validate_tally(tally_instance)
-                if error_message:
-                    self.error_collection.add_error(ErrorModel(line, error_message))
-
-                tallies[tally_instance.id] = tally_instance
-                comment = ""
-            elif line.startswith("c"):
-                comment += re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip())
-            else:
-                comment = ""
-
-        return tallies
+        self.logger.debug("Parsing tallies")
+        return self._parse_block(
+            regex_pattern='^f\d+:',
+            create_instance_func=Tally.create_from_input_line,
+            validate_func=self.validator.validate_tally
+        )
 
     def get_physics(self):
         information_dict = {}
