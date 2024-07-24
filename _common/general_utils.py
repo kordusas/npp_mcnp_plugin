@@ -11,6 +11,8 @@ def validate_return_id_as_int(id):
         except ValueError:
             # Handle the case where conversion is not possible
             id = None
+            # print error message using logging
+            logging.error("Invalid id '{}' provided. Expected an integer.".format(id))
     return id
 
 def format_notifier_message(items_to_show):
