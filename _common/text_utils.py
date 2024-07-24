@@ -143,7 +143,7 @@ class ViewOfLine(object):
         current_line = editor.getLine(current_line_no).lower()
         if "$" in current_line:
             current_line = current_line.split("$", 1)[0]
-        return current_line
+        return current_line.rstrip().lstrip()
 
     def get_full_mcnp_input_line(self):
         if not self.is_continuation_line:
@@ -162,10 +162,10 @@ class ViewOfLine(object):
             if not self.is_continuation_line(self.current_line_no-line_offset):
                 break
 
-            full_line_parts.insert(0, previous_line.rstrip())
+            full_line_parts.insert(0, previous_line)
             line_offset += 1
 
-        return ''.join(full_line_parts).strip("&")
+        return ' '.join(full_line_parts).strip("&")
 
     def _get_previous_line(self, line_offset):
         return self._get_line_without_comment(self.current_line_no - line_offset)
