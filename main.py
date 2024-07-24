@@ -56,7 +56,7 @@ class editorHandler:
         if  args['updated'] is False or  UPDATE.SELECTION is False:
             return 
         # getting the current line and the selection in a class
-        view_of_current_line = ViewOfLine()
+        view_of_current_line = ViewOfLine.from_notepad()
         
         # if the current line is a comment or the selection is empty or the line is empty then return
         if view_of_current_line.is_comment_line or view_of_current_line.selection_is_empty or view_of_current_line.is_empty_line:
@@ -80,8 +80,8 @@ class editorHandler:
                 self.handle_non_space_character(char_added)
 
     def handle_non_space_character(self, char_added):
-        current_line_instance = ViewOfLine()
-        if  current_line_instance.is_comment_line:
+        view_of_current_line = ViewOfLine.from_notepad()
+        if  view_of_current_line.is_comment_line:
             return 
         
         self.logger.info("char added in non comment line")

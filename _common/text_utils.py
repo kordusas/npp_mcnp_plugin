@@ -21,17 +21,29 @@ class ViewOfLine(object):
     """
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
-    def __init__(self):
+    def __init__(self, current_line=None, selected_text=None, cursor_column=None, current_line_no=None, selection_start=None, selection_end=None):
+        self.current_line = current_line
+        self.selected_text = selected_text
+        self.cursor_column = cursor_column
+        self.current_line_no = current_line_no
+
+        self.selection_start = selection_start
+        self.selection_end = selection_end
         self.logger = logging.getLogger(self.__class__.__name__)
-        self._initialize_view_properties()
-        
-    def _initialize_view_properties(self):
-        self.selected_text = self.selected_text = editor.getSelText().lower().split("imp")[0].strip()
-        self.selection_start = editor.getColumn(editor.getSelectionStart())
-        self.selection_end = editor.getColumn(editor.getSelectionEnd())
-        self.cursor_column = editor.getColumn(editor.getCurrentPos())
-        self.current_line_no = editor.lineFromPosition(editor.getCurrentPos())
-        self.current_line = self._get_line_without_comment(self.current_line_no)
+
+    @classmethod
+    def from_notepad(cls):
+        selected_text = editor.getSelText().lower().split("imp")[0].strip()
+        selection_start = editor.getColumn(editor.getSelectionStart())
+        selection_end = editor.getColumn(editor.getSelectionEnd())
+        cursor_column = editor.getColumn(editor.getCurrentPos())
+        current_line_no = editor.lineFromPosition(editor.getCurrentPos())
+        instance = cls(None, selected_text, cursor_column, current_line_no,selection_start,selection_end)
+
+        instance.current_line = instance._get_line_without_comment(current_line_no)
+
+        return instance
+
 
     def is_selection_after_pattern(self, pattern):
         return pattern in self.text_till_cursor
