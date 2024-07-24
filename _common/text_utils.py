@@ -169,28 +169,25 @@ class ViewOfLine(object):
 
     def _get_previous_line(self, line_offset):
         return self._get_line_without_comment(self.current_line_no - line_offset)
-        
-    def find_space_separated_token_end_positions(self, token_index):
+
+    def find_space_separated_token_end_positions(self, token_index, pattern=r'\S+'):
         """
         Finds the position immediately after the first character of a specified space-separated token in a string.
 
-        This method identifies positions in the string where a space separates two alphanumeric or special character tokens
-        (e.g., '+', '-', '*', '/', '(', ')'). It returns the position immediately after the first character of the specified
-        space-separated token, based on a 0-indexed token_index.
+        This method identifies positions in the string where a space separates characters based on the provided pattern.
 
         Parameters:
         - token_index (int): The index of the token for which to find the end position, where indexing starts at 0.
+        - pattern (str): The regular expression pattern to identify tokens. Default is r'\S+'. we locate space separated tokens and find where it ends in the line
 
         Returns:
         - int: The position immediately after the first character of the specified space-separated token.
         """
-        pattern = r'([a-zA-Z0-9+\-*/()])(\s+)([a-zA-Z0-9+\-*/()])'
-        matches = re.finditer(pattern, self.current_line)
-        # As this returns the end o
-        end_positions = [match.start()+1 for match in matches]
-        return end_positions[token_index] if token_index < len(end_positions) else None
-
-    
+        matches = list(re.finditer(pattern, self.current_line))
+        if token_index < len(matches):
+            match = matches[token_index]
+            return match.end()
+        return None 
 
 
 class FileParser(object):
