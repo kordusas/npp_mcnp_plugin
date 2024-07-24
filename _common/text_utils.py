@@ -83,6 +83,7 @@ class ViewOfLine(object):
         line = self._get_line_without_comment(line_number)
         if line.startswith('    '):
             return True
+       
         previous_line = self._get_line_without_comment(line_number - 1)
         return previous_line.endswith('&')
     
@@ -124,7 +125,7 @@ class ViewOfLine(object):
             1. If the keyword 'fill' is present in the current line and the selection start position is after the 'fill' keyword, the line is considered a lattice line.
             2. If the current line is a continuation line (starts with four spaces)  the text from the previous line(s) is prepended to the current line until a non-continuation line is encountered. If the resulting text contains the keyword 'fill', the line is considered a lattice line.
         """
-        self.logger.debug("Called method is_lattice_line\n")
+        self.logger.debug("Called method is_lattice_line")
         full_line = self.get_full_mcnp_input_line()
         if "fill" in self.current_line:
             fill_index = self.current_line.find("fill")
