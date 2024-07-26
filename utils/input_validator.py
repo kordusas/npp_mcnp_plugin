@@ -1,32 +1,6 @@
-from mcnp_utils import Surface, Cell, Material, Transformation, Tally
+from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally
 from Npp import notepad
 
-class ErrorModel(object):
-    def __init__(self, line, message):
-        self.line = line
-        self.message = message
-
-    def __str__(self):
-        return "Line {}: {}".format(self.line, self.message)
-
-class ErrorCollection(object):
-    def __init__(self):
-        self.errors = None
-
-    def add_error(self, error):
-        if self.errors is None:
-            self.errors = [error]
-        else:
-            self.errors.append(error)
-
-    def get_all_errors(self):
-        return self.errors
-    def is_not_empty(self):
-        return self.errors is not None
-    def __str__(self):
-        if self.errors is None:
-            return ""
-        return "\n".join(str(error) for error in self.errors)
 
 class InputValidator(object):
     """
@@ -99,31 +73,3 @@ class InputValidator(object):
         return None
 
 
-class ErrorView():
-    """
-    This class is used to display error messages.
-    Implements Singleton pattern to ensure only one instance is used throughout the application.
-    """
-    def __new__(cls):
-        if cls._instance is None:
-            cls.instance = super(ErrorView, cls).__new__(cls)
-        return cls.instance
-    def notify(self, error_model_instance):
-        """
-        This method is responsible for notifying the user about the error message.
-
-        :param error_model_instance: An instance of the ErrorModel class containing the error message.
-        :type error_message: str
-
-        The function calls the 'notepad.messageBox' function to display the error message to the user.
-
-        :return: None
-        :rtype: None
-        """
-        
-        title = "MCNP Input Errors"
-        flags = 0  # 0 for a standard 'OK' message box
-
-        # Display the message box
-        if error_model_instance.is_not_empty():
-            notepad.messageBox(str(error_model_instance), title, flags)    

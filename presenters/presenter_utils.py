@@ -1,36 +1,36 @@
 from abc import ABCMeta, abstractmethod
 import logging
-from general_utils import format_notifier_message, validate_return_id_as_int
-from information import surface_info
+from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int
+from npp_mcnp_plugin.data.information import surface_info
 import re
 
-def BlockPreseterFactory(block_type,  view_of_current_line, mcnp_input, notifier):
+def BlockPreseterFactory(block_type,  model_of_current_line, mcnp_input, notifier):
     """
     This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
     """
     
     if block_type == "surface":
-        return SurfaceBlockPresenter(view_of_current_line, mcnp_input, notifier)
+        return SurfaceBlockPresenter(model_of_current_line, mcnp_input, notifier)
     elif block_type == "cell":
-        return CellBlockPresenter(view_of_current_line, mcnp_input, notifier)
+        return CellBlockPresenter(model_of_current_line, mcnp_input, notifier)
     elif block_type == "physics":
-        return PhysicsBlockPresenter(view_of_current_line, mcnp_input, notifier)    
+        return PhysicsBlockPresenter(model_of_current_line, mcnp_input, notifier)    
 
 
 class AbstractBlockSelectionPresenter(object):
     __metaclass__ = ABCMeta  # This makes it an abstract class in Python 2.7
 
-    def __init__(self, view_of_current_line, mcnp_input, notifier):
+    def __init__(self, model_of_current_line, mcnp_input, notifier):
         """
         Initialize the block presenter with the given view of the current line, MCNP input, notifier, and debug flag.
 
         Args:
-            view_of_current_line (ViewOfCurrentLine): The view of the current line containing the selected text.
+            model_of_current_line (ViewOfCurrentLine): The view of the current line containing the selected text.
             mcnp_input (MCNPIO): The MCNP input object
             notifier (Notifier): The notifier object responsible for displaying messages to the user.
             debug (bool, optional): A flag indicating whether debugging information should be logged. Defaults to True.
         """
-        self.view_of_selected_line = view_of_current_line
+        self.model_of_selected_line = model_of_current_line
         self.mcnp_input = mcnp_input
         self.notifier = notifier
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -46,8 +46,8 @@ class AbstractBlockSelectionPresenter(object):
         pass
 
 class CellBlockPresenter(AbstractBlockSelectionPresenter):
-    def __init__(self, view_of_current_line, mcnp_input, notifier):
-        super(CellBlockPresenter, self).__init__(view_of_current_line, mcnp_input, notifier,)   
+    def __init__(self, model_of_current_line, mcnp_input, notifier):
+        super(CellBlockPresenter, self).__init__(model_of_current_line, mcnp_input, notifier,)   
     """
     This class is used to handle the selection of cell blocks of text.
     """
@@ -55,18 +55,18 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function checks if the cell is in the correct format.
         """
-        return "like" in self.view_of_selected_line.current_line and "but" in self.view_of_selected_line.current_line
+        return "like" in self.model_of_selected_line.current_line and "but" in self.model_of_selected_line.current_line
     
     def is_cell_id_selected(self):
         """
         This function checks if the cell id is selected.
         """
         self.logger.debug("Called method is_cell_id_selected")
-        first_entry_in_selection = self.view_of_selected_line.first_entry_in_selection
-        first_line_entry = self.view_of_selected_line.first_entry_in_line
+        first_entry_in_selection = self.model_of_selected_line.first_entry_in_selection
+        first_line_entry = self.model_of_selected_line.first_entry_in_line
         # check if the cursor is further than the lenght of the first entry in the line
-        if len(str(first_line_entry)) > self.view_of_selected_line.selection_end+1:
-            self.logger.info("Cursor column is {}".format(self.view_of_selected_line.selection_end+1))
+        if len(str(first_line_entry)) > self.model_of_selected_line.selection_end+1:
+            self.logger.info("Cursor column is {}".format(self.model_of_selected_line.selection_end+1))
             self.logger.info("Cursor is further than the lenght of the first entry in the line")
             return False
         elif first_entry_in_selection.isdigit() and first_line_entry.isdigit():
@@ -76,14 +76,14 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
     def is_material_id_selected(self):
         """
         This function checks if the material id is selected.
-        It analyses the view_of_current_line and returns True if the material is selected.
+        It analyses the model_of_current_line and returns True if the material is selected.
         """
-        first_entry_in_selection = self.view_of_selected_line.first_entry_in_selection
-        second_entry_in_current_line = self.view_of_selected_line.current_line_list[1]
+        first_entry_in_selection = self.model_of_selected_line.first_entry_in_selection
+        second_entry_in_current_line = self.model_of_selected_line.current_line_list[1]
 
-        self.logger.debug( "Called method is_material_id_selected")
-        self.logger.debug("First entry in selection: {}".format(first_entry_in_selection)) 
-        self.logger.debug("Second entry in current line: {}".format(second_entry_in_current_line))
+        self.logger.debug("Called method is_material_id_selected")
+        self.logger.info("First entry in selection: {}".format(first_entry_in_selection)) 
+        self.logger.info("Second entry in current line: {}".format(second_entry_in_current_line))
         if first_entry_in_selection.isdigit() and second_entry_in_current_line.isdigit():
             return first_entry_in_selection == second_entry_in_current_line
         return False
@@ -98,7 +98,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             parse the selected line and return all surface ids in the selection
             """
             # remove the characters which are not needed which are logical operators such as 
-            all_surfaces = re.sub(r"[-:()]", " ", self.view_of_selected_line.selected_text).split()
+            all_surfaces = re.sub(r"[-:()]", " ", self.model_of_selected_line.selected_text).split()
             all_surfaces = [surface.lstrip("0") for surface in all_surfaces]
             selected_surfaces = [surface for surface in all_surfaces if surface.isdigit()]
             if selected_surfaces:
@@ -110,8 +110,8 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function checks if the selection should be ignored.
         """
-        if self.view_of_selected_line.is_lattice_line or self.view_of_selected_line.is_selection_after_pattern("imp"):
-            self.logger.debug("Ignore line")
+        if self.model_of_selected_line.is_lattice_line or self.model_of_selected_line.is_selection_after_pattern("imp"):
+            self.logger.info("Ignore line")
             return True
         return False
         
@@ -119,7 +119,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function handles the cell id selection.
         """
-        cell_id = self.view_of_selected_line.first_entry_in_selection
+        cell_id = self.model_of_selected_line.first_entry_in_selection
         cell_id = validate_return_id_as_int(cell_id)
 
         self.logger.debug("Cell id selected: {}".format(cell_id))
@@ -129,7 +129,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function handles the material id selection.
         """
-        material_id = self.view_of_selected_line.first_entry_in_selection
+        material_id = self.model_of_selected_line.first_entry_in_selection
         material_id = validate_return_id_as_int(material_id)
 
         material = self.mcnp_input.get_material(material_id)
@@ -149,7 +149,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
     def is_cell_definition_selected(self):
         self.logger.debug( "Called method is_cell_definition_selected")
         # get second entry in the line which is material id
-        material_id = validate_return_id_as_int(self.view_of_selected_line.current_line_list[1])
+        material_id = validate_return_id_as_int(self.model_of_selected_line.current_line_list[1])
 
         
         # if material is not void then cell definition starts after third entry(index is 0 based)
@@ -161,10 +161,10 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         
             
         
-        cell_definition_start = self.view_of_selected_line.find_space_separated_token_end_positions(index_of_token)
+        cell_definition_start = self.model_of_selected_line.find_space_separated_token_end_positions(index_of_token)
         self.logger.debug( "Cell definition start: {}".format(cell_definition_start))
-        self.logger.debug( "Selection end: {}".format(self.view_of_selected_line.selection_end))
-        if self.view_of_selected_line.selection_start < cell_definition_start:
+        self.logger.debug( "Selection end: {}".format(self.model_of_selected_line.selection_end))
+        if self.model_of_selected_line.selection_start < cell_definition_start:
             self.logger.debug( "Cell definition is not selected")
             return False
         return True
@@ -179,7 +179,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             return None
         elif self.is_cell_like_but_format():
             return None        
-        elif self.view_of_selected_line.is_current_line_continuation_line:
+        elif self.model_of_selected_line.is_current_line_continuation_line:
             self.logger.debug( "Continuation line")
             return self._handle_surfaces_selected()
         elif self.is_material_id_selected():
@@ -194,8 +194,8 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
 
 
 class PhysicsBlockPresenter(AbstractBlockSelectionPresenter):
-    def __init__(self, view_of_current_line, mcnp_input, notifier):
-        super(PhysicsBlockPresenter, self).__init__(view_of_current_line, mcnp_input, notifier,)    
+    def __init__(self, model_of_current_line, mcnp_input, notifier):
+        super(PhysicsBlockPresenter, self).__init__(model_of_current_line, mcnp_input, notifier,)    
     def analyze_selection(self):
         """
         Implement the abstract method to handle physics block selection.
@@ -204,8 +204,8 @@ class PhysicsBlockPresenter(AbstractBlockSelectionPresenter):
         pass
 
 class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
-    def __init__(self, view_of_current_line, mcnp_input, notifier):
-        super(SurfaceBlockPresenter, self).__init__(view_of_current_line, mcnp_input, notifier)
+    def __init__(self, model_of_current_line, mcnp_input, notifier):
+        super(SurfaceBlockPresenter, self).__init__(model_of_current_line, mcnp_input, notifier)
 
     @property
     def is_selection_a_surface_type(self):
@@ -218,7 +218,7 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
         Returns:
             bool: True if the selected text is a surface type, False otherwise.
         """
-        selected_text = self.view_of_selected_line.first_entry_in_selection
+        selected_text = self.model_of_selected_line.first_entry_in_selection
         return all(not text.isdigit() for text in selected_text)
 
     @property
@@ -235,21 +235,21 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
             bool: True if the selected line is a transformation, False otherwise.
         """
         self.logger.debug( "Called method is_selection_a_transformation")
-        if self.view_of_selected_line.is_current_line_continuation_line:
+        if self.model_of_selected_line.is_current_line_continuation_line:
             return False
-        elif self.view_of_selected_line.has_non_digit_chars_before_cursor:
+        elif self.model_of_selected_line.has_non_digit_chars_before_cursor:
             return False
 
-        second_entry = self.view_of_selected_line.current_line_list[1]
+        second_entry = self.model_of_selected_line.current_line_list[1]
         if second_entry.isdigit():
-            first_selected_entry = self.view_of_selected_line.first_entry_in_selection
+            first_selected_entry = self.model_of_selected_line.first_entry_in_selection
             return first_selected_entry == second_entry
         return False
     def _handle_surface_type_selected(self):
         """
         Handle the selected surface type.
         """
-        surface_type = self.view_of_selected_line.first_entry_in_selection
+        surface_type = self.model_of_selected_line.first_entry_in_selection
         self.logger.debug( "Surface type selected: {}".format(surface_type))
         return {"type": "surface_type", "value": surface_info.get(surface_type, "Surface type not found...")}
     
@@ -257,7 +257,7 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
         """
         Handle the selected transformation.
         """
-        transformation_id = self.view_of_selected_line.first_entry_in_selection.lstrip("0")
+        transformation_id = self.model_of_selected_line.first_entry_in_selection.lstrip("0")
         transformation_id = validate_return_id_as_int(transformation_id)
 
         # here should go a logic to return the transformation instance which could be then printed by notifier for now just create transformation instance
