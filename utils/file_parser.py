@@ -178,7 +178,7 @@ class FileParser(object):
     def get_tallies(self):
         self.logger.debug("Parsing tallies")
         return self._parse_block(self.physics_block,
-            regex_pattern='^(\+?f)(\d+):',
+            regex_pattern='^(\+?f)(\d+)\:?',
             create_instance_func=Tally.create_from_input_line,
             validate_func=self.validator.validate_tally
         )
