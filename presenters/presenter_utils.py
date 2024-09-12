@@ -222,7 +222,7 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
             bool: True if the selected text is a surface type, False otherwise.
         """
         selected_text = self.model_of_selected_line.first_entry_in_selection
-        return all(not text.isdigit() for text in selected_text)
+        return all(not text.isdigit() and text != "+" and text !="-" for text in selected_text)
 
     @property
     def is_selection_a_transformation(self):
