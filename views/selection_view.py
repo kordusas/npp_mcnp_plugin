@@ -22,11 +22,8 @@ class SelectionNotification():
         """
         if not message:
             editor.callTipShow(editor.getSelectionEnd(), "The Machine Spirit Does not Recognize this Selection")
-
-        if isinstance(message, str):
-            editor.callTipShow(editor.getSelectionEnd(), message)
         else:
-            editor.callTipShow(editor.getSelectionEnd(), "wrong message type: {}\n".format(type(message)))
+            editor.callTipShow(editor.getSelectionEnd(), message)
 
 
     def notify(self, analysis_result):
