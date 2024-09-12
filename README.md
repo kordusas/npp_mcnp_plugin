@@ -46,12 +46,17 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 - **Status**: Planned
 - **Description**: Plans to develop functionalities for physics blocks are in place. This will allow users to access pertinent information and insights specific to physics blocks.
 
+### MCNP Error Checking 
+- **Status**: Planned 
+- **Description**: impement error checking for parsed MCNP datacards and pops and error message
+#### Tally Error checking
+- checks if the particle designators are valid
 
 ## Installation
 1. Download the latest release of Python Script
 2. Navigate to the Notepad++ installation path 
-3. place the main.py in the ../plugins/PythonScript/scripts folder
-4. place the _common directory in the ../plugins/PythonScript/lib
+3. place the npp_mcnp_plugin directory in the ../plugins/PythonScript/lib folder
+4. place the main.py file in the ../plugins/PythonScript/scripts
 
 
 ## Usage
