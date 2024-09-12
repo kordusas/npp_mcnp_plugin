@@ -5,7 +5,7 @@ class ErrorModel(object):
         self.message = message
 
     def __str__(self):
-        return "Line {}: {}".format(self.line, self.message)
+        return "Line content: {} : {}".format(self.line, self.message)
 
 
 class ErrorCollection(object):
