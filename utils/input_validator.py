@@ -1,5 +1,6 @@
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally
 from Npp import notepad
+import os, json
 
 
 class InputValidator(object):
@@ -8,8 +9,15 @@ class InputValidator(object):
     """
 
     def __init__(self):
-        pass
+        self.surface_info = self.initialise_json_data('surface_info.json')
+        self.particle_designators_info = self.initialise_json_data('particle_designators_info.json')
 
+    def initialise_json_data(self, filename):
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, '..', 'data', filename)
+        with open(file_path, 'r') as json_file:
+            surface_info = json.load(json_file)
+        return surface_info
     def validate_cell(self, cell):
         """
         Validates a cell object and returns an error message if necessary.
@@ -24,7 +32,7 @@ class InputValidator(object):
         """
         Validates a surface object and returns an error message if necessary.
         """
-        valid_surface_types = ['box', 'rpp', 'sph', 'rcc', 'rhp', 'rec', 'trc', 'ell', 'wed', 'arb', 'px', 'py', 'pz', 'so', 's', 'sx', 'sy', 'sz', 'c/x', 'c/y', 'c/z', 'cx', 'cy', 'cz', 'k/x', 'k/y', 'k/z', 'kx', 'ky', 'kz', 'sq', 'gq', 'tx', 'ty', 'tz', 'x', 'y', 'z', 'p']
+        valid_surface_types = self.surface_info.keys()
 
         if not isinstance(surface, Surface):
             return "Invalid surface object. Expected a Surface object."
@@ -45,7 +53,6 @@ class InputValidator(object):
         if transformation.parameters is None:
             return "Transformation id {} parameters are missing.".format(transformation.id)
         return None
-
     def validate_tally(self, tally):
         """
         Validates a tally object and returns an error message if necessary.
@@ -54,10 +61,33 @@ class InputValidator(object):
             return "Invalid tally object. Expected a Tally object."
         if tally.id is None:
             return "Tally id is missing."
-        if tally.particles is None:
-            return "Tally id {} is missing particle designator.".format(tally.id)
+        
+        error = self._validate_tally_particles(tally)
+        if error:
+            return error
+        
         if tally.entries is None:
             return "Tally id {} is missing cells/surfaces.".format(tally.id)
+        
+        return None
+
+    def _validate_tally_particles(self, tally):
+        """
+        Validates the particles attribute of a tally object.
+        """
+        valid_particles = self.particle_designators_info.keys()
+        
+        if tally.particles is None:
+            return "Tally id {} is missing particle designator.".format(tally.id)
+        
+        if isinstance(tally.particles, str):
+            if tally.particles not in valid_particles:
+                return "Tally id {} invalid particle designator {}.".format(tally.id, tally.particles)
+        
+        if isinstance(tally.particles, list):
+            for particle in tally.particles:
+                if particle not in valid_particles:
+                    return "Tally id {} invalid particle designator {}.".format(tally.id, particle)
         return None
 
     def validate_material(self, material):

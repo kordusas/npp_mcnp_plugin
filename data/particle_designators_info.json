@@ -1,0 +1,228 @@
+{
+"NA": {
+"mass": 0,
+"name": "Not Applicable",
+"upper_erg_limit": 0
+},
+ "@": {
+ "lower_erg_limit": 0.001,
+ "mass": 1672.45,
+ "name": "anti omega",
+ "upper_erg_limit": 1.7825
+ },
+ "~": {
+ "lower_erg_limit": 0.001,
+ "mass": 1197.436,
+ "name": "anti negative sigma baryon",
+ "upper_erg_limit": 1.2676
+ },
+ "/": {
+ "lower_erg_limit": 0.001,
+ "mass": 139.57018,
+ "name": "positive pion",
+ "upper_erg_limit": 0.13957
+ },
+ "a": {
+ "lower_erg_limit": 0.001,
+ "mass": 3727.418,
+ "name": "alpha particle",
+ "upper_erg_limit": 4.0
+ },
+ "%": {
+ "lower_erg_limit": 0.0,
+ "mass": 497.672,
+ "name": "kaon, short",
+ "upper_erg_limit": 0.0
+ },
+ "t": {
+ "lower_erg_limit": 0.001,
+ "mass": 2808.951,
+ "name": "triton",
+ "upper_erg_limit": 3.0
+ },
+ "k": {
+ "lower_erg_limit": 0.001,
+ "mass": 493.677,
+ "name": "positive kaon",
+ "upper_erg_limit": 0.52614
+ },
+ "^": {
+ "lower_erg_limit": 0.0,
+ "mass": 497.672,
+ "name": "kaon, long",
+ "upper_erg_limit": 0.0
+ },
+ "!": {
+ "lower_erg_limit": 0.001,
+ "mass": 105.658389,
+ "name": "positive muon",
+ "upper_erg_limit": 0.11261
+ },
+ "c": {
+ "lower_erg_limit": 0.001,
+ "mass": 1314.9,
+ "name": "anti cascade; anti neutral xi baryon",
+ "upper_erg_limit": 1.0
+ },
+ "b": {
+ "lower_erg_limit": 0.001,
+ "mass": 1115.684,
+ "name": "anti lambda baryon",
+ "upper_erg_limit": 1.0
+ },
+ "e": {
+ "mass": 0.511008,
+ "MCNP decay treatment": "1x10^29",
+ "designator": "electron",
+ "upper_erg_limit": 0.001,
+ "lower_erg_limit": 1e-05
+ },
+ "d": {
+ "lower_erg_limit": 0.001,
+ "mass": 1875.627,
+ "name": "deuteron",
+ "upper_erg_limit": 2.0
+ },
+ "g": {
+ "lower_erg_limit": 0.001,
+ "mass": 938.27231,
+ "name": "anti proton",
+ "upper_erg_limit": 1.0
+ },
+ "f": {
+ "lower_erg_limit": 0.001,
+ "mass": 0.511008,
+ "name": "positron",
+ "upper_erg_limit": 0.001
+ },
+ "<": {
+ "lower_erg_limit": 0.0,
+ "mass": 0.0,
+ "name": "anti electron neutrino",
+ "upper_erg_limit": 0.0
+ },
+ "h": {
+ "lower_erg_limit": 0.001,
+ "mass": 938.27231,
+ "name": "proton",
+ "upper_erg_limit": 1.0
+ },
+ "+": {
+ "lower_erg_limit": 0.001,
+ "mass": 1189.37,
+ "name": "positive sigma baryon",
+ "upper_erg_limit": 1.2676
+ },
+ "*": {
+ "lower_erg_limit": 0.001,
+ "mass": 139.56995,
+ "name": "negative pion",
+ "upper_erg_limit": 0.14875
+ },
+ "-": {
+ "lower_erg_limit": 0.001,
+ "mass": 1197.436,
+ "name": "negative sigma baryon",
+ "upper_erg_limit": 1.2676
+ },
+ "l": {
+ "lower_erg_limit": 0.001,
+ "mass": 1115.684,
+ "name": "lambda baryon",
+ "upper_erg_limit": 1.0
+ },
+ "o": {
+ "lower_erg_limit": 0.001,
+ "mass": 1672.45,
+ "name": "omega baryon",
+ "upper_erg_limit": 1.7825
+ },
+ "n": {
+ "lower_erg_limit": 0.0,
+ "MCNP decay treatment": "no decay",
+ "mass": 939.56563,
+ "name": "neutron",
+ "upper_erg_limit": 0.0
+ },
+ "q": {
+ "lower_erg_limit": 0.0,
+ "MCNP decay treatment": "no decay",
+ "mass": 939.56563,
+ "name": "anti neutron",
+ "upper_erg_limit": 0.0
+ },
+ "p": {
+ "mass": 0.0,
+ "MCNP decay treatment": "1x10^29",
+ "designator": "photon",
+ "upper_erg_limit": 0.001,
+ "lower_erg_limit": 1e-06
+ },
+ "s": {
+ "lower_erg_limit": 0.001,
+ "mass": 2808.421,
+ "name": "helion (3He)",
+ "upper_erg_limit": 3.0
+ },
+ "u": {
+ "lower_erg_limit": 0.0,
+ "MCNP decay treatment": "1x10^29",
+ "mass": 0.0,
+ "name": "electron neutrino",
+ "upper_erg_limit": 0.0
+ },
+ "_": {
+ "lower_erg_limit": 0.001,
+ "mass": 1189.37,
+ "name": "anti positive sigma baryon",
+ "upper_erg_limit": 1.2676
+ },
+ "w": {
+ "lower_erg_limit": 0.001,
+ "mass": 1321.32,
+ "name": "positive cascade; positive xi baryon",
+ "upper_erg_limit": 1.4082
+ },
+ "v": {
+ "lower_erg_limit": 0.0,
+ "mass": 0.0,
+ "name": "muon neutrino",
+ "upper_erg_limit": 0.0
+ },
+ "y": {
+ "lower_erg_limit": 0.001,
+ "mass": 1321.32,
+ "name": "negative cascade; negative xi baryon",
+ "upper_erg_limit": 1.4082
+ },
+ "x": {
+ "lower_erg_limit": 0.001,
+ "mass": 1314.9,
+ "name": "cascade; xi baryon",
+ "upper_erg_limit": 1.0
+ },
+ "z": {
+ "lower_erg_limit": 0.0,
+ "mass": 134.9764,
+ "name": "neutral pion",
+ "upper_erg_limit": 0.0
+ },
+ "|": {
+ "lower_erg_limit": 0.001,
+ "MCNP decay treatment": "2.19703x10-6",
+ "mass": 105.658389,
+ "name": "negative muon",
+ "upper_erg_limit": 0.11261
+ },
+ "?": {
+ "lower_erg_limit": 0.001,
+ "mass": 493.677,
+ "name": "negative kaon",
+ "upper_erg_limit": 0.52614
+ },
+ ">": {
+ "lower_erg_limit": 0.0,
+ "mass": 0.0,
+ "name": "anti muon neutrino",
+ "upper_erg_limit": 0.0}
+ }
