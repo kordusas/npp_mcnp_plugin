@@ -14,7 +14,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
   -  
 
 ### Autocomplete 
-- **Status**: (Planned)
+- **Status**: Planned
 - **Description**: A future enhancement to introduce an autocomplete feature that suggests MCNP keywords and parameters as you type. This aims to boost productivity by offering real-time suggestions and minimizing syntax errors. The feature will be context-aware, providing suggestions based on the specific block you are working in:
   - **In Cell Block**:
     - Suggest autocomplete surface ID during typing from the available surface dictionary. 
@@ -29,28 +29,32 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
     - When in tallies, suggest available surfaces or cells depending on the tally. This will require context awareness about what type of tally it is.
 
 
-#### Cells Block Information
+### Cells Block Information
 - **Status**: Partially Implemented
 - **Description**: For cell blocks, 
 - selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model. (need cell parsing)
 - Selecting the material popups info about the material. (need material parsing)
 - selecting surfaces popups information about the selected surfaces. (completed)
 
-#### Surfaces Block Information
-- **Status**: Partially Implemented
+### Surfaces Block Information
+- **Status**: Completed
 - **Description**: 
-  - selecting a surface type provides information about that type. Only part of surface types have description currently. Future updates will expand this feature to offer comprehensive details on all surface interactions. (started, need to complete all descriptions)
-  - selecting the transformation popups info about that trcl (started, need to parse trcl)
+  - selecting a surface type provides information about that type. May add more surface types in data/surface_info.json 
+  - selecting the transformation popups info about that trcl
 
-#### Physics Block Information (Planned)
+### Physics Block Information (Planned)
 - **Status**: Planned
 - **Description**: Plans to develop functionalities for physics blocks are in place. This will allow users to access pertinent information and insights specific to physics blocks.
 
 ### MCNP Error Checking 
-- **Status**: Planned 
-- **Description**: impement error checking for parsed MCNP datacards and pops and error message
-#### Tally Error checking
-- checks if the particle designators are valid
+- **Status**: Partially Implemented
+- **Description**: Pops a message after parsing the MCNP input and checking if 
+   -  tally particle identifiers are valid
+   -  +f6 tally doesnt have a particle identifier
+   -  tally parameters (cells or surfaces) are missing
+   -  surface type is valid
+   -  transformation parameters are missing
+
 
 ## Installation
 1. Download the latest release of Python Script
