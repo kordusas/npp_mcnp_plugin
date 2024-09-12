@@ -9,12 +9,15 @@ def BlockPreseterFactory(block_type,  model_of_current_line, mcnp_input, notifie
     This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
     """
     
-    if block_type == "surface":
+    if block_type == "surfaces":
         return SurfaceBlockPresenter(model_of_current_line, mcnp_input, notifier)
-    elif block_type == "cell":
+    elif block_type == "cells":
         return CellBlockPresenter(model_of_current_line, mcnp_input, notifier)
     elif block_type == "physics":
-        return PhysicsBlockPresenter(model_of_current_line, mcnp_input, notifier)    
+        return PhysicsBlockPresenter(model_of_current_line, mcnp_input, notifier)  
+    else:
+        logging.error("Unknown block type: %s", block_type)
+        return None
 
 
 class AbstractBlockSelectionPresenter(object):
@@ -180,7 +183,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         elif self.is_cell_like_but_format():
             return None        
         elif self.model_of_selected_line.is_current_line_continuation_line:
-            self.logger.debug( "Continuation line")
+            self.logger.debug("Continuation line")
             return self._handle_surfaces_selected()
         elif self.is_material_id_selected():
             return self._handle_material_id_selected()
