@@ -42,9 +42,13 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
   - selecting a surface type provides information about that type. May add more surface types in data/surface_info.json 
   - selecting the transformation popups info about that trcl
 
-### Physics Block Information (Planned)
+### Physics Block Information
 - **Status**: Planned
 - **Description**: Plans to develop functionalities for physics blocks are in place. This will allow users to access pertinent information and insights specific to physics blocks.
+   - pop information about surfaces in ssr/ssw card
+   - info about cells in ssr/ssw card
+   - info about cells in sdef
+   - info about surfaces in sdef
 
 ### MCNP Error Checking 
 - **Status**: Partially Implemented
