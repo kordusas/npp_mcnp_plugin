@@ -164,7 +164,7 @@ class FileParser(object):
     def get_transformations(self):
         self.logger.debug("Parsing transformations")
         return self._parse_block(self.physics_block,
-            regex_pattern="^(?:\*?tr\d)",
+            regex_pattern="\*?tr\d",
             create_instance_func=Transformation.create_from_input_line
         )
 

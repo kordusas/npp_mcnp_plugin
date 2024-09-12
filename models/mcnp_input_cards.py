@@ -86,7 +86,7 @@ class Transformation(Printable):
         In future may need improvement if we want to initialise the transformation with different parameters:
         cosine or angles
         """
-        match = re.search(r'tr(\d+)(.*)', line)
+        match = re.search(r'\*?tr(\d+)(.*)', line)
         id = validate_return_id_as_int(match.group(1))
         parameters = match.group(2)
         # if * in line then this is angles and not cosines
