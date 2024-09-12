@@ -1,7 +1,13 @@
 from Npp import console
 import logging
-
+import os, json
 # Add the format_notifier_message function
+def initialise_json_data( filename):
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, '..', 'data', filename)
+        with open(file_path, 'r') as json_file:
+            surface_info = json.load(json_file)
+        return surface_info
 
 def validate_return_id_as_int(id):
     # Step 1: Validate and Convert material_id

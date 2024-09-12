@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import logging
-from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int
-from npp_mcnp_plugin.data.information import surface_info
+from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int, initialise_json_data
+surface_info = initialise_json_data("surface_info.json")
 import re
 
 def BlockPreseterFactory(block_type,  model_of_current_line, mcnp_input, notifier):
