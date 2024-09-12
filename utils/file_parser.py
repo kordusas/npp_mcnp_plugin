@@ -2,7 +2,7 @@ from Npp import editor, console
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material
 from npp_mcnp_plugin.models.error import  ErrorModel, ErrorCollection
 from npp_mcnp_plugin.utils.input_validator import InputValidator
-from npp_mcnp_plugin.utils.general_utils import is_match_at_start
+from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_match_at_start
 
 import re
 import logging
@@ -155,7 +155,7 @@ class FileParser(object):
                         self.error_collection.add_error(ErrorModel(line, error_message))
                 parsed_items[instance.id] = instance
                 comment = ""
-            elif line.startswith("c"):
+            elif is_comment_line(line):
                 comment += " " + re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip("||").strip())
             else:
                 comment = ""

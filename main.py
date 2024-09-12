@@ -9,6 +9,7 @@ from npp_mcnp_plugin.models.line_model import ModelOfLine
 from npp_mcnp_plugin.models.error import  ErrorCollection  
 from npp_mcnp_plugin.models.mcnp_input  import ModelMcnpInput   
 from npp_mcnp_plugin.utils.general_utils import configure_logging, get_char_from_args
+from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_string_empty
 import logging
 
 CHAR_PERIOD = "."
@@ -63,7 +64,9 @@ class editorHandler:
         model_of_current_line = ModelOfLine.from_notepad()
         
         # if the current line is a comment or the selection is empty or the line is empty then return
-        if model_of_current_line.is_comment_line or model_of_current_line.selection_is_empty or model_of_current_line.is_empty_line:
+        if (is_comment_line(model_of_current_line.current_line) or 
+            is_string_empty(model_of_current_line.selected_text) or 
+            is_string_empty(model_of_current_line.current_line)):
             return
         
         # getting the block type according to which we can select presenter

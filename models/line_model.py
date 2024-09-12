@@ -84,15 +84,7 @@ class ModelOfLine(object):
         previous_line = self._get_line_without_comment(line_number - 1)
         return previous_line.endswith('&')
     
-    @property
-    def is_empty_line(self):
-        return self.current_line.strip() == ""  
-    @property
-    def selection_is_empty(self):
-        return self.selected_text.strip() == ""
-    @property
-    def is_comment_line(self):
-        return self.current_line.lstrip().startswith('c') 
+
     # Helper method for regular expressions (example)
     def _find_last_number_in_string(self, string):
         try:
