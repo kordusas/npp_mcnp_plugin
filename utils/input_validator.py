@@ -62,9 +62,14 @@ class InputValidator(object):
         if tally.id is None:
             return "Tally id is missing."
         
-        error = self._validate_tally_particles(tally)
-        if error:
-            return error
+        if tally.collision_heating_enabled is False:
+            error = self._validate_tally_particles(tally)
+            if error:
+                return error
+        elif tally.particles is not None:
+            error = "Tally id {} collision heating enabled but particles present.".format(tally.id)
+            if error:
+                return error
         
         if tally.entries is None:
             return "Tally id {} is missing cells/surfaces.".format(tally.id)
