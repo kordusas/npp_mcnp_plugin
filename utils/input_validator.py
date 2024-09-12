@@ -1,4 +1,5 @@
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally
+from npp_mcnp_plugin.utils.general_utils import initialise_json_data
 from Npp import notepad
 import os, json
 
@@ -9,15 +10,9 @@ class InputValidator(object):
     """
 
     def __init__(self):
-        self.surface_info = self.initialise_json_data('surface_info.json')
-        self.particle_designators_info = self.initialise_json_data('particle_designators_info.json')
+        self.surface_info = initialise_json_data('surface_info.json')
+        self.particle_designators_info = initialise_json_data('particle_designators_info.json')
 
-    def initialise_json_data(self, filename):
-        current_dir = os.path.dirname(__file__)
-        file_path = os.path.join(current_dir, '..', 'data', filename)
-        with open(file_path, 'r') as json_file:
-            surface_info = json.load(json_file)
-        return surface_info
     def validate_cell(self, cell):
         """
         Validates a cell object and returns an error message if necessary.
