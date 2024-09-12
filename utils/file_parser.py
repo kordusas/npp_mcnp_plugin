@@ -131,7 +131,7 @@ class FileParser(object):
     def get_cells(self):
         pass
 
-    def _parse_block(self, regex_pattern, create_instance_func, validate_func=None):
+    def _parse_block(self, block, regex_pattern, create_instance_func, validate_func=None):
         """
         Generic method to parse a block of lines based on a regex pattern and create instances using a provided function.
 
@@ -145,7 +145,7 @@ class FileParser(object):
         """
         parsed_items = {}
         comment = ""
-        for line in self.physics_block:
+        for line in block:
             if is_match_at_start(line, regex_pattern=regex_pattern):
                 instance = create_instance_func(line, comment)
                 self.logger.debug("Created instance: %s", instance)
@@ -163,26 +163,33 @@ class FileParser(object):
 
     def get_transformations(self):
         self.logger.debug("Parsing transformations")
-        return self._parse_block(
+        return self._parse_block(self.physics_block,
             regex_pattern="^(?:\*?tr\d)",
             create_instance_func=Transformation.create_from_input_line
         )
 
     def get_materials(self):
         self.logger.debug("Parsing materials")
-        return self._parse_block(
+        return self._parse_block(self.physics_block,
             regex_pattern='m(\d+)(.*)',
             create_instance_func=Material.create_from_input_line
         )
 
     def get_tallies(self):
         self.logger.debug("Parsing tallies")
-        return self._parse_block(
-            regex_pattern='^f\d+:',
+        return self._parse_block(self.physics_block,
+            regex_pattern='^(\+?f)(\d+):',
             create_instance_func=Tally.create_from_input_line,
             validate_func=self.validator.validate_tally
         )
-
+    def get_surfaces(self):
+        self.logger.debug("Parsing surfaces")
+        return self._parse_block(self.surfaces_block,
+            regex_pattern='^\d+',
+            create_instance_func=Surface.create_from_input_line,
+            validate_func=self.validator.validate_surface
+        )
+    
     def get_physics(self):
         information_dict = {}
         for line in self.physics_block:
@@ -218,71 +225,6 @@ class FileParser(object):
 
         # stripping the line  from right side to remove any trailing spaces
         return line.rstrip(" "), comment + comment_new
-               
-
-
-    def get_surfaces(self):
-        """
-        returns the parsed surface dictionary
-        parsed surfaces indexed by their ID.
-
-        Returns:
-            parsed_surfaces (dict): A dictionary of `Surface` objects representing the parsed surfaces,
-                                    indexed by their surface ID.
-        """
-        parsed_surfaces = {}
-        comment = ""
-        for line in self.surfaces_block:
-            if line.startswith("c"):
-                comment += line
-                continue
-            surface = self.parse_surface(line, comment)
-            parsed_surfaces[surface.id] = surface
-            comment = ""
-        return parsed_surfaces
-    
-    def parse_surface(self, line, comment=""):
-        """
-        Parses a single surface line and returns a `Surface` object.
-
-        Args:
-            line (str): The line to parse.
-            comment (str): The comment associated with the surface.
-
-        Returns:
-            surface (Surface): The parsed `Surface` object.
-        """
-        try:
-            surface_data = line.split("$")
-            if len(surface_data) >= 2:
-                comment = surface_data[1].strip()
-
-            surface_data = surface_data[0].split()
-            if len(surface_data) < 1:
-                raise ValueError("Surface ID is missing")
-
-            surface_id = int(surface_data[0])
-            surface_transform = None
-            surface_type = None
-            surface_params = ""
-
-            if len(surface_data) >= 2:
-                if surface_data[1].isdigit():
-                    surface_transform = surface_data[1]
-                    if len(surface_data) >= 3:
-                        surface_type = surface_data[2]
-                        surface_params = ' '.join(surface_data[3:])
-                else:
-                    surface_type = surface_data[1]
-                    surface_params = ' '.join(surface_data[2:])
-
-            surface = Surface(surface_id, surface_type, surface_params, comment, surface_transform)
-            self.logger.info("Surface parsed: %d", surface_id)
-            return surface
-
-        except Exception as e:
-            self.logger.error("Error parsing surface: %s\nException: %s", line, str(e))
-            return Surface(surface_id, surface_type, surface_params, comment, surface_transform)
 
     def analyse_file(self):
         self.set_header_flag()
