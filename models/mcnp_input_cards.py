@@ -11,15 +11,20 @@ class Printable(object):
         pass
 
 class Tally(Printable):
-    def __init__(self, tally_id, particles=None, entries=None, energies=None, comment=None):
+    def __init__(self, tally_id, particles=None, entries=None, energies=None, comment=None, collision_heating_enabled=False):
         assert isinstance(tally_id, int), "tally_id must be an int"
         self.id = tally_id
         self.particles = particles
         self.entries = entries
         self.energies = energies
         self.comment = comment
+        self.collision_heating_enabled = collision_heating_enabled
+
     def __str__(self):
-        return "Tally%s:%s %s" % (self.id, self.particles, self.entries)
+        if self.particles:
+            return "Tally %s:%s %s" % (self.id, self.particles, self.entries)
+        else:
+            return "Tally %s: %s" % (self.id, self.entries)
     def print_output(self):
         pass
     def add_comment(self, comment):
@@ -33,38 +38,6 @@ class Tally(Printable):
         Add energy bins to the tally instance as they are often also in a separate keyword E
         """
         self.energies = energies
-    @staticmethod
-    def get_f6_tally_data_from_line( line):
-        """
-        This method returns a Tally instance created from the given line.
-        """
-        # Assumption: line format is "f<number> <other entries, >"
-        # Example: "f6 1 100"
-        
-        tally_particles = "Not Applicable"
-        entries = None
-
-        return tally_particles, entries 
-    @staticmethod
-    def get_tally_data_from_line(line):
-        tally_particles_match = re.search(r':(\S+)', line)
-        
-        if  tally_particles_match is None:
-            return None, None
-        
-        
-        tally_particles = tally_particles_match.group(1).split(",")
-        
-        # Split line once and extract entries after the first space
-        line_parts = line.split()
-        # Raise ValueError if tally_entries are empty
-        if len(line_parts) <2:
-            return tally_particles, None
-        # Extract entries after the first space, if any
-        tally_entries = line_parts[1:] if len(line_parts) > 1 else []
-
-        return tally_particles, tally_entries
-        
     @classmethod
     def create_from_input_line(cls, line, comment=None):
         """
@@ -77,17 +50,26 @@ class Tally(Printable):
         # Example: "f4:H,He 1 100"
         
         # Use re.search safely for tally_id and tally_particles
-        tally_id_match = re.search(r'f(\d+):', line)
-        tally_id = validate_return_id_as_int(tally_id_match.group(1))
+        # Regex pattern explanation:
+        # (\+?f)    : Matches an optional '+' followed by 'f'
+        # (\d+)     : Matches one or more digits (the tally number)
+        # \:?        : Matches an optional colon
+        # (\S+)?    : Matches one or more non-whitespace characters (optional, the particles)
+        # (.*)      : Matches the rest of the line (the entries)
+        match = re.search(r'(\+?f)(\d+)\:?(\S+)?(.*)', line.lower())
         
-        # if tally id ends with 6 it is special tally
-        if tally_id % 10 == 6:
-            tally_particles, tally_entries = cls.get_f6_tally_data_from_line(line)
+        if not match:
+            return None
+        if "+" in match.group(1):
+            collision_heating_enabled = True
         else:
-            tally_particles, tally_entries = cls.get_tally_data_from_line(line)
+            collision_heating_enabled = False
 
-        return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment)
-    
+        tally_id = validate_return_id_as_int(match.group(2))
+        tally_particles = match.group(3).split(",") if match.group(3) else None
+        tally_entries = match.group(4).split() if match.group(4) else None
+        
+        return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment, collision_heating_enabled=collision_heating_enabled)
 class Transformation(Printable):
     def __init__(self, transformation_id, parameters, comment=None):
         assert isinstance(transformation_id, int), "transformation_id must be an int"
@@ -140,9 +122,42 @@ class Surface(Printable):
         if not self.transformation:
             return "%s %s %s" % (self.id, self.surface_type, self.parameters)
         return "%s %s %s %s" % (self.id, self.transformation, self.surface_type, self.parameters)
+    @classmethod
+    def create_from_input_line(cls, line, comment=None):
+        """
+        Parses a single surface line and returns a `Surface` object.
 
+        Args:
+            line (str): The line to parse.
+            comment (str): The comment associated with the surface.
+
+        Returns:
+            surface (Surface): The parsed `Surface` object.
+        """
+        surface_data = line.split()
+        if len(surface_data) < 1:
+            raise ValueError("Surface ID is missing")
+
+        surface_id = validate_return_id_as_int(surface_data[0])
+        surface_transform = None
+        surface_type = None
+        surface_params = ""
+
+        if len(surface_data) >= 2:
+            if surface_data[1].isdigit():
+                surface_transform = surface_data[1]
+                if len(surface_data) >= 3:
+                    surface_type = surface_data[2]
+                    surface_params = ' '.join(surface_data[3:])
+            else:
+                surface_type = surface_data[1]
+                surface_params = ' '.join(surface_data[2:])
+
+        return cls(surface_id, surface_type, surface_params, comment, surface_transform)
+
+        
 class Isotope(object):
-    # class variable for easo of access to element names
+    # class variable for ease of access to element names
     # hand checked.
     element_names = {
     1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
