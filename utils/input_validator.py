@@ -1,4 +1,4 @@
-from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally
+from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally, Isotope
 from npp_mcnp_plugin.utils.general_utils import initialise_json_data
 from Npp import notepad
 import os, json
@@ -29,8 +29,8 @@ class InputValidator(object):
         """
         if not isinstance(cell, Cell):
             return "Invalid cell object. Expected a Cell object."
-        if cell.cell_id is None:
-            return "Cell id is missing."
+        if cell.id is None:
+            return "Cell ID is missing."
         return None
 
     def validate_surface(self, surface):
@@ -42,9 +42,9 @@ class InputValidator(object):
         if not isinstance(surface, Surface):
             return "Invalid surface object. Expected a Surface object."
         if surface.id is None:
-            return "Surface id is missing."
+            return "Surface ID is missing."
         if surface.surface_type not in valid_surface_types:
-            return "Surface id {} invalid surface type {}.".format(surface.id, surface.surface_type)
+            return "Surface ID {} invalid surface type {}.".format(surface.id, surface.surface_type)
         return None
 
     def validate_transformation(self, transformation):
@@ -110,6 +110,11 @@ class InputValidator(object):
             return "Material id is missing."
         if material.isotopes is None:
             return "Material id {} has no isotopes.".format(material.id)
+        for isotope in material.isotopes:
+            error = self._validate_isotope(isotope)
+            if error:
+                return "Material id {} error: {}".format(material.id,error) 
+
         return None
 
 
