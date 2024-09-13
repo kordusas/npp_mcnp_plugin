@@ -13,6 +13,16 @@ class InputValidator(object):
         self.surface_info = initialise_json_data('surface_info.json')
         self.particle_designators_info = initialise_json_data('particle_designators_info.json')
 
+    def _validate_isotope(self, isotope):
+        """
+        Validates an isotope and returns an error message if necessary.
+        """
+        if not isinstance(isotope, Isotope):
+            return "Invalid isotope. Expected an Isotope object."
+        if isotope.name =='Unknown Element':
+            return "Issue with isotope {}.".format(isotope.zzzaaa)
+        
+        return None
     def validate_cell(self, cell):
         """
         Validates a cell object and returns an error message if necessary.

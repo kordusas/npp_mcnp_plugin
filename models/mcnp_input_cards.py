@@ -160,8 +160,9 @@ class Isotope(object):
     # hand checked.
     element_names = initialise_json_data("element_names.json")
 
-    def __init__(self, name, z, a, abundance, library=None):
+    def __init__(self, zzzaaa, name, z, a, abundance, library=None):
         self.name = name
+        self.zzzaaa = zzzaaa
         self.z = z
         self.a = a
         self.abundance = abundance
@@ -173,7 +174,7 @@ class Isotope(object):
         z = zzzaaa / 1000
         a = zzzaaa % 1000
         name = cls.get_element_name(z)
-        return cls(name, z, a, abundance, library)
+        return cls(zzzaaa, name, z, a, abundance, library)
 
     @classmethod
     def get_element_name(cls, z):
@@ -198,6 +199,7 @@ class Material(Printable):
         self.density = None
         self.atomic_density = None
         self.isotopes = isotopes if isotopes is not None else []
+       
         
     def __str__(self):
         sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
