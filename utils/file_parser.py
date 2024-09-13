@@ -1,5 +1,5 @@
 from Npp import editor, console
-from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material
+from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material, Cell
 from npp_mcnp_plugin.models.error import  ErrorModel, ErrorCollection
 from npp_mcnp_plugin.utils.input_validator import InputValidator
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_match_at_start
@@ -125,11 +125,6 @@ class FileParser(object):
         merged_block.append(line)
         if comment:
             merged_block.insert(-2, "c " + comment.strip() + "\n")    
-    def _parse_cell(self):
-        pass
-
-    def get_cells(self):
-        pass
 
     def _parse_block(self, block, regex_pattern, create_instance_func, validate_func=None):
         """
@@ -147,8 +142,14 @@ class FileParser(object):
         comment = ""
         for line in block:
             if is_match_at_start(line, regex_pattern=regex_pattern):
-                instance = create_instance_func(line, comment)
+
+                # returns instance and error message if any during the instance creation
+                instance, error_message = create_instance_func(line, comment)
                 self.logger.debug("Created instance: %s", instance)
+
+                if error_message:
+                    self.error_collection.add_error(ErrorModel(line, error_message))
+                # Validating the instance if provided
                 if validate_func:
                     error_message = validate_func(instance)
                     if error_message:
@@ -172,7 +173,8 @@ class FileParser(object):
         self.logger.debug("Parsing materials")
         return self._parse_block(self.physics_block,
             regex_pattern='m(\d+)(.*)',
-            create_instance_func=Material.create_from_input_line
+            create_instance_func=Material.create_from_input_line,
+            validate_func=self.validator.validate_material
         )
 
     def get_tallies(self):
@@ -189,7 +191,13 @@ class FileParser(object):
             create_instance_func=Surface.create_from_input_line,
             validate_func=self.validator.validate_surface
         )
-    
+    def get_cells(self):
+        self.logger.debug("Parsing cells")
+        return self._parse_block(self.cells_block,
+            regex_pattern='(\d+)\s+(\d+)\s+(\S+)\s+(.*)',
+            create_instance_func=Cell.create_from_input_line,
+            validate_func=self.validator.validate_cell
+        )    
     def get_physics(self):
         information_dict = {}
         for line in self.physics_block:
