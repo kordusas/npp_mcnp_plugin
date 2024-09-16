@@ -18,7 +18,6 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 
 ### Autocomplete 
 - **Status**: Planned
-- **Status**: Planned
 - **Description**: A future enhancement to introduce an autocomplete feature that suggests MCNP keywords and parameters as you type. This aims to boost productivity by offering real-time suggestions and minimizing syntax errors. The feature will be context-aware, providing suggestions based on the specific block you are working in:
   - **In Cell Block**:
     - Suggest autocomplete surface ID during typing from the available surface dictionary. 
