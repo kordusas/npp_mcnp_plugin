@@ -56,6 +56,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
    -  tally particle identifiers are valid
    -  +f6 tally doesnt have a particle identifier
    -  tally parameters (cells or surfaces) are missing
+   -  tally is missing
    -  surface type is valid
    -  transformation parameters are missing
 
@@ -75,8 +76,14 @@ One can set up the shortcuts to the script following the advise in the discussio
 
 ## Examples 
 
-Notification on cell block and surface block information. 
+Notification on cell block and surface block information happens once you select the card of interest. 
+
 ![](selection_notification_example.gif)
+
+The error checking happens every time you save a file and pops a separate window with comprehensive information. 
+
+
+![](error_message_popup_example.gif)
 
 
 ## Structure and Interaction
@@ -86,10 +93,16 @@ The architecture of the plugin is designed around a core concept: the MCNP input
 To ensure the plugin remains responsive and up-to-date with the latest changes made by the user, the input file is re-parsed every time it is saved. This approach guarantees that the information provided by the plugin is always accurate, though we are considering optimizations to improve parsing speed for larger files.
 
 The `on_selection` function is where the magic happens. It:
-1. Identifies the user's selection.
-2. Creates an instance of the `text` class based on that selection.
-3. Determines the block within the MCNP input file where the selection is located.
-4. Identifies the specific content that is selected.
-5. Matches this identified information against the structured data within the `mcnp_input` class instance to provide contextual information back to the user.
+1. Creates an instance of the `text` class based on that selection.
+2. Determines the block within the MCNP input file where the selection is located.
+3. Identifies the specific content that is selected.
+4. Matches this identified information against the structured data within the `mcnp_input` class instance to provide contextual information back to the user.
 
 For the autocomplete feature, a similar approach will be implemented. The autocomplete functionality will leverage the structured `mcnp_input` class to suggest relevant MCNP keywords and parameters as the user types. This will not only enhance the user experience by providing real-time suggestions but also help in minimizing syntax errors by suggesting only valid options based on the current context within the file. The autocomplete system will be context-aware, adjusting its suggestions based on the specific block the user is editing (e.g., within a cell block, surface block, or material block), ensuring that the suggestions are always relevant and helpful.
+
+
+The MCNP error popu is handled by errorcollection
+
+The error class instances are created in two locations:
+-  file_parser class if instance creation failed this produces error. 
+-  in main handler class after mcnp_input is already created and separate parts are validated by the validator class
