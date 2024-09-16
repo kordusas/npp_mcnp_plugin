@@ -118,7 +118,7 @@ class ModelMcnpInput(object):
         """
         This function returns the tally with the given number.
         """
-        pass
+        return  self.tallies.get(tally_id, "tally {}: The Machine god doesn't recognize this material".format(tally_id))
     def get_transformation(self, transformation_id):
         """
         This function returns the transformation with the given number. currently  a placeholder
