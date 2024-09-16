@@ -6,6 +6,9 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 
 ## Features
 
+### General
+- file reload on tab switch in notepad++ (based on filename change)
+
 ### Generative Methods
 - **Status**: Planned 
 - **Description**: impement generative methods to simplify MCNP input writting. 

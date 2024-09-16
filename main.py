@@ -63,9 +63,11 @@ class editorHandler:
         
 
     def on_select(self, args):
+        # if file has changed reload!
+        if str(notepad.getCurrentFilename()) != self.parsed_file.filename:
+            self._initialise_parser_and_mcnp_input()
         # if the selection arguments are not updated
         #  and the selection is not updated
-        
         if  args['updated'] is False or  UPDATE.SELECTION is False:
             return 
         # getting the current line and the selection in a class
