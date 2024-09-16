@@ -1,6 +1,13 @@
 from Npp import console
-
+import logging
+import os, json
 # Add the format_notifier_message function
+def initialise_json_data( filename):
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, '..', 'data', filename)
+        with open(file_path, 'r') as json_file:
+            surface_info = json.load(json_file)
+        return surface_info
 
 def validate_return_id_as_int(id):
     # Step 1: Validate and Convert material_id
@@ -10,6 +17,8 @@ def validate_return_id_as_int(id):
         except ValueError:
             # Handle the case where conversion is not possible
             id = None
+            # print error message using logging
+            logging.error("Invalid id '{}' provided. Expected an integer.".format(id))
     return id
 
 def format_notifier_message(items_to_show):
@@ -26,15 +35,13 @@ def format_notifier_message(items_to_show):
         return '\n'.join([str(item) for item in items_to_show])
     else:  # Assuming it's an object instance
         return str(items_to_show)
-    
-def log_debug(debug, message):
-    """
-    Log a debug message to the console.
 
-    Args:
-        message (str): The message to log.
-    """
-    if debug:
-        console.write(message)
-
-        
+def configure_logging(enable_logging=True):
+    logging_level = logging.DEBUG if enable_logging else logging.CRITICAL
+    logging.basicConfig(level=logging_level)
+def get_char_from_args(args):
+    try:
+        return chr(args['ch'])
+    except Exception as e:
+        console.write("Error in on_character_added: {}".format(str(e)))
+        return None

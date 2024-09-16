@@ -1,0 +1,82 @@
+{
+    "rpp":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"c/z":
+"A cylinder parallel to z axis. Provide X,Y and R as parameters", 
+"gq":
+"A Cylinder, Cone, Ellipsoid, Hyperboloid Paraboloid. Axes not parallel to x,y or z axis. Provide parameters A,B,C,D,E,F,G, H, J, K", 
+"wed":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"sph":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"cz":
+"A cylinder on z axis parallel to z axis and defined by radius. Provide  R as parameter", 
+"cy":
+"A cylinder on y axis parallel to y axis and defined by radius. Provide  R as parameter", 
+"cx":
+"A cylinder on x axis parallel to x axis and defined by radius. Provide  R as parameter", 
+"rph":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"tz":
+"Elliptical or Circular Torus, Axis is parallel to z axis. Provide parameters x,y,z, A,B,C", 
+"tx":
+"Elliptical or Circular Torus, Axis is parallel to x axis. Provide parameters x,y,z, A,B,C", 
+"k/x":
+"Cone parallel to the x-axis. Provide parameters x,y,z,t^2, and +/-1", 
+"pz":
+"A plane perpendicular to the z-axis. Provide Z as parameter", 
+"c/x":
+"A cylinder parallel to x axis. Provide Y,Z and R as parameters", 
+"px":
+"A plane perpendicular to the x-axis. Provide X as parameter", 
+"py":
+"A plane perpendicular to the y-axis. Provide Y as parameter", 
+"hex":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"rec":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"rcc":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"K/z":
+"Cone parallel to the y-axis. Provide parameters x,y,z,t^2, and +/-1", 
+"z":
+"Surfaces defined by points see Section 3.2.2.2 and 3.2.2.3", 
+"x":
+"Surfaces defined by points see Section 3.2.2.2 and 3.2.2.3 ", 
+"c/y":
+"A cylinder parallel to y axis. Provide X,Z and R as parameters", 
+"box":
+"Form: BOX vx vy vz a1x a1y a1z a2x a2y a2z a3x a3y a3z\nvx vy vz: The x, y, z coordinates of a corner of the box.\na1x a1y a1z: Vector of 1st side from the specified corner coordinates.\na2x a2y a2z: Vector of 2nd side from the specified corner coordinates.\na3x a3y a3z: Vector of 3rd side from the specified corner coordinates.", 
+"sz":
+"A sphere defined by its centered on z axis and radius Provide Z, R as parameters", 
+"sy":
+"A sphere defined by its centered on y axis and radius Provide Y, R as parameters", 
+"sx":
+"A sphere defined by its centered on x axis and radius Provide X, R as parameters", 
+"ell":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"sq":
+"An ellipsoid,hyperboloid, or paraboloid axes parallel to x,y, or z axis. Provide parameters A,B,C,D,E,F,G, x,y,z", 
+"ty":
+"Elliptical or Circular Torus, Axis is parallel to y axis. Provide parameters x,y,z, A,B,C", 
+"arb":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)", 
+"p":
+"Surfaces defined by points see Section 3.2.2.2 and 3.2.2.3", 
+"s":
+"A sphere defined by its center and radius. Provide X, Y, Z, R as parameters", 
+"k/z":
+"Cone parallel to the z-axis. Provide parameters x,y,z,t^2, and +/-1", 
+"so":
+"A sphere defined by its center of origin and radius Provide R as parameters", 
+"y":
+"Surfaces defined by points see Section 3.2.2.2 and 3.2.2.3", 
+"kz":
+"Cone on the z-axis. Provide parameters z,t^2, and +/-1", 
+"ky":
+"Cone on the y-axis. Provide parameters y,t^2, and +/-1", 
+"kx":
+"Cone on the x-axis. Provide parameters x,t^2, and +/-1", 
+"trc":
+"Surfaces defined by macrobodies (See Section 3.2.2.4)"
+}
