@@ -18,7 +18,7 @@ CHAR_SPACE = " "
 CHAR_L = "l"
 CHAR_HASH = "#"
 from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory
-from npp_mcnp_plugin.presenters.error_presenter import validate_mcnp_model
+from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
 class editorHandler:
     def __init__(self, selection_notifier, error_notifier, autocomplete_notifier):
         self.selection_notifier = selection_notifier
