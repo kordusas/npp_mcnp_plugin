@@ -6,10 +6,11 @@ from npp_mcnp_plugin.views.selection_view import  SelectionNotification
 from npp_mcnp_plugin.views.error_view   import  ErrorView
 
 from npp_mcnp_plugin.models.line_model import ModelOfLine
-from npp_mcnp_plugin.models.error import  ErrorCollection  
+from npp_mcnp_plugin.models.error import  ErrorCollection, ErrorModel
 from npp_mcnp_plugin.models.mcnp_input  import ModelMcnpInput   
 from npp_mcnp_plugin.utils.general_utils import configure_logging, get_char_from_args
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_string_empty
+from npp_mcnp_plugin.utils.input_validator import InputValidator
 import logging
 
 CHAR_PERIOD = "."
@@ -25,6 +26,7 @@ class editorHandler:
         self.autocomplete_notifier = autocomplete_notifier
         self.logger = logging.getLogger(self.__class__.__name__)
         
+        
         # initialisng parser instance from file cls method 
         self._initialise_parser_and_mcnp_input()
         
@@ -34,19 +36,61 @@ class editorHandler:
         editor.callbackSync(self.on_character_added, [SCINTILLANOTIFICATION.CHARADDED])
         notepad.callback(self.on_document_saved, [NOTIFICATION.FILESAVED])
         pass
+    def _validate_mcnp_model(self, mcnp_error_collection):
+        """
+        Validates the parsed MCNP input model by iterating over the surfaces, cells, materials, and tallies.
+        Collects validation errors if any.
+        """
+        self.logger.info("Validating MCNP model")
 
+        validator = InputValidator()  # initialise validator
+
+        # Validate Surfaces
+        for surface_id, surface in self.mcnp_input.surfaces.items():
+            error_code, error_message = validator.validate_surface(surface)
+            if error_message:
+                mcnp_error_collection.add_error(ErrorModel(str(surface), error_message, error_code))
+
+        # Validate Cells
+        for cell_id, cell in self.mcnp_input.cells.items():
+            error_code, error_message = validator.validate_cell(cell)
+            if error_message:
+                mcnp_error_collection.add_error(ErrorModel(str(cell), error_message, error_code))
+
+        # Validate Materials
+        for material_name, material in self.mcnp_input.materials.items():
+            error_code, error_message = validator.validate_material(material)
+            if error_message:
+                mcnp_error_collection.add_error(ErrorModel(str(material), error_message, error_code))
+
+        # Validate Tallies
+        for tally_id, tally in self.mcnp_input.tallies.items():
+            error_code, error_message = validator.validate_tally(tally)
+            if error_message:
+                mcnp_error_collection.add_error(ErrorModel(str(tally), error_message, error_code))
+
+        # Check if the model has any tallies present if not add error to the collection
+        if not self.mcnp_input.tallies:
+            mcnp_error_collection.add_error(ErrorModel("Tally Block", "No tallies present in the file", "TALLY_BLOCK_EMPTY"))
+
+        self.logger.info("Validation complete.")
     def _initialise_parser_and_mcnp_input(self):
         """
-        parse the file and create the mcnp input instance.
+        Parse the file and create the MCNP input instance. Validate the model after parsing.
         """
         self.logger.info("Initialising ErrorCollection")
         mcnp_error_collection = ErrorCollection()
         self.logger.info("Initialising parser and Mcnp input")
+        
+        # Parse the file
         self.parsed_file = FileParser.from_file(notepad.getCurrentFilename(), mcnp_error_collection)
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
-        
+
+        # Validate the parsed model
+        self._validate_mcnp_model(mcnp_error_collection)
+
+        # Notify the error view if there are any validation errors
         self.logger.debug("Parsing errors: %s", mcnp_error_collection)
-        
         self.error_notifier.notify(mcnp_error_collection)
 
     def on_document_saved(self, args):
