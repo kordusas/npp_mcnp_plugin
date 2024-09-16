@@ -14,7 +14,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 - **Description**: impement generative methods to simplify MCNP input writting. 
   - implement command to auto generate basic input structure, for example \generate input creates all basic blocks of MCNP input 
   - implement LLM based input generation for example \generate input with beam neutron source and a collimator for detector simulations
-  -  
+  
 
 ### Autocomplete 
 - **Status**: Planned
@@ -35,7 +35,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 ### Cells Block Information
 - **Status**: Partially Implemented
 - **Description**: For cell blocks, 
-- selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model. (need cell parsing)
+- selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model. (need to create popup message)
 - Selecting the material popups info about the material. (completed)
 - selecting surfaces popups information about the selected surfaces. (completed)
 
@@ -43,7 +43,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 - **Status**: Completed
 - **Description**: 
   - selecting a surface type provides information about that type. May add more surface types in data/surface_info.json 
-  - selecting the transformation popups info about that trcl
+  - selecting the transformation of the surface popups info about that trcl
 
 ### Physics Block Information
 - **Status**: Planned
