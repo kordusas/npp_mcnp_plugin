@@ -14,10 +14,8 @@ class FileParser(object):
         self.error_collection = error_collection
         self.lines = None
         self.message_block = None
-        self.cells_block = None
-        self.surfaces_block = None
-        self.physics_block = None
         self.has_header = False
+        self.block = {}
         self.block_locations = {}
         self.title  = ""
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -28,29 +26,31 @@ class FileParser(object):
 
     def set_block_locations(self):
         """
-        Finds and returns the different blocks of data in the file.
+        Finds and sets the start and end lines of each block of data in the file.
+
+        This method identifies the indices of empty lines in the file, which are used to determine the boundaries of different blocks of data (cells, surfaces, and physics). It then sets the start and end lines for each block in the `block_locations` attribute. If a header is present, it adjusts the indices accordingly.
 
         Returns:
-            block_locations (dict): The start and end lines of each block.
+            None
         """
         self.logger.info("Called method set_block_locations...\n")
 
         block_start_indices = []
-        
+        offset = 1  # Offset to account for the title line and empty lines
+
         for i, line in enumerate(self.lines):
             if line.strip() == "":
                 block_start_indices.append(i)
-        
+
         if self.has_header:
             self.parse_header(block_start_indices[0])
-            block_start_indices[0] += 1 # adding 1 as this is empty line
+            block_start_indices[0] += offset  # adding offset as this is an empty line
         else:
             block_start_indices.insert(0, 0)
-        
-        # +2 because first line is always a title
-        self.block_locations['cells'] = {'start': block_start_indices[0]+1, 'end': block_start_indices[1]}
-        self.block_locations['surfaces'] = {'start': block_start_indices[1]+1, 'end': block_start_indices[2]}
-        self.block_locations['physics'] = {'start': block_start_indices[2]+1, 'end': len(self.lines)}
+
+        self.block_locations['cells'] = {'start': block_start_indices[0] + offset, 'end': block_start_indices[1]}
+        self.block_locations['surfaces'] = {'start': block_start_indices[1] + offset, 'end': block_start_indices[2]}
+        self.block_locations['physics'] = {'start': block_start_indices[2] + offset, 'end': block_start_indices[3] + offset if len(block_start_indices) > 3 else len(self.lines)}
                 
         return 
     def parse_header(self, line_no):
@@ -59,9 +59,9 @@ class FileParser(object):
     def parse_title(self):
         self.title = self.lines[self.block_locations['cells']['start']-1]
     def parse_blocks(self):
-        self.cells_block = self.format_blocks(self.lines[self.block_locations['cells']['start']:self.block_locations['cells']['end']])
-        self.surfaces_block = self.format_blocks(self.lines[self.block_locations['surfaces']['start']:self.block_locations['surfaces']['end']])
-        self.physics_block = self.format_blocks(self.lines[self.block_locations['physics']['start']:])
+        for key in ['cells','surfaces', 'physics']:
+            self.block[key] =self.format_blocks(self.lines[self.block_locations[key]['start']:self.block_locations[key]['end']])
+
 
     def parse(self):
         """
@@ -73,7 +73,7 @@ class FileParser(object):
         self.parse_title()
 
         self.logger.info("Cells block: %d\nSurfaces block: %d\nPhysics block: %d\n",
-            len(self.cells_block), len(self.surfaces_block), len(self.physics_block)
+            len(self.block["cells"]), len(self.block["surfaces"]), len(self.block["physics"])
         )
 
     def format_blocks(self, block):
@@ -121,7 +121,7 @@ class FileParser(object):
         if comment:
             merged_block.insert(-2, "c " + comment.strip() + "\n")    
 
-    def _parse_block(self, block, regex_pattern, create_instance_func, validate_func=None):
+    def _parse_block(self, block, regex_pattern, create_instance_func):
         """
         Generic method to parse a block of lines based on a regex pattern and create instances using a provided function.
 
@@ -156,43 +156,39 @@ class FileParser(object):
 
     def get_transformations(self):
         self.logger.debug("Parsing transformations")
-        return self._parse_block(self.physics_block,
+        return self._parse_block(self.block["physics"],
             regex_pattern="\*?tr\d",
             create_instance_func=Transformation.create_from_input_line
         )
 
     def get_materials(self):
         self.logger.debug("Parsing materials")
-        return self._parse_block(self.physics_block,
+        return self._parse_block(self.block["physics"],
             regex_pattern='m(\d+)(.*)',
             create_instance_func=Material.create_from_input_line,
-            validate_func=self.validator.validate_material
         )
 
     def get_tallies(self):
         self.logger.debug("Parsing tallies")
-        return self._parse_block(self.physics_block,
+        return self._parse_block(self.block["physics"],
             regex_pattern='^(\+?f)(\d+)\:?',
             create_instance_func=Tally.create_from_input_line,
-            validate_func=self.validator.validate_tally
         )
     def get_surfaces(self):
         self.logger.debug("Parsing surfaces")
-        return self._parse_block(self.surfaces_block,
+        return self._parse_block(self.block["surfaces"],
             regex_pattern='^\d+',
             create_instance_func=Surface.create_from_input_line,
-            validate_func=self.validator.validate_surface
         )
     def get_cells(self):
         self.logger.debug("Parsing cells")
-        return self._parse_block(self.cells_block,
+        return self._parse_block(self.block["cells"],
             regex_pattern='(\d+)\s+(\d+)\s+(\S+)\s+(.*)',
             create_instance_func=Cell.create_from_input_line,
-            validate_func=self.validator.validate_cell
         )    
     def get_physics(self):
         information_dict = {}
-        for line in self.physics_block:
+        for line in self.block["physics"]:
             if line.startswith("kcode"):
                 # parse source object
                 information_dict['kcode'] = line
