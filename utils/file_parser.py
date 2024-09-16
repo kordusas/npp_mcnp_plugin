@@ -1,6 +1,6 @@
 from Npp import editor, console
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material, Cell
-from npp_mcnp_plugin.models.error import  ErrorModel, ErrorCollection
+from npp_mcnp_plugin.models.error import  ErrorModel
 from npp_mcnp_plugin.utils.input_validator import InputValidator
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_match_at_start
 

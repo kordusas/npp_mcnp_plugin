@@ -254,7 +254,7 @@ class Material(Printable):
         # Separate the parameters; they are paired in zzzaaa and abundance, and from that create isotope instances
         parameters = match.group(2).split()
         if len(parameters) % 2 != 0:
-            error_message = "uneven amount of entries for material {}".format(material_id)
+            error_message = "Uneven amount of material entries"
             return material_instance, error_message
         
         for i in range(0, len(parameters), 2):
