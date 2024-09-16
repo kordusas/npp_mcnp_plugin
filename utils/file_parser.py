@@ -8,13 +8,8 @@ import re
 import logging
 
 class FileParser(object):
-    def __init__(self, filename, error_collection, validator=None):
+    def __init__(self, filename, error_collection):
         self.filename = filename
-        # can use different validator in case there is such
-        if validator is None:
-            self.validator = InputValidator()
-        else:
-            self.validator = validator
 
         self.error_collection = error_collection
         self.lines = None
@@ -145,16 +140,13 @@ class FileParser(object):
 
                 # returns instance and error message if any during the instance creation
                 instance, error_message = create_instance_func(line, comment)
-                self.logger.debug("Created instance: %s", instance)
+                
 
                 if error_message:
-                    self.error_collection.add_error(ErrorModel(line, error_message))
-                # Validating the instance if provided
-                if validate_func:
-                    error_message = validate_func(instance)
-                    if error_message:
-                        self.error_collection.add_error(ErrorModel(line, error_message))
-                parsed_items[instance.id] = instance
+                    self.error_collection.add_error(ErrorModel(line, error_message,  "INVALID_DATA"))
+                if instance:
+                    self.logger.debug("Created instance: %s", instance)
+                    parsed_items[instance.id] = instance
                 comment = ""
             elif is_comment_line(line):
                 comment += " " + re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip("||").strip())
