@@ -104,8 +104,12 @@ The `on_selection` function is where the magic happens. It:
 For the autocomplete feature, a similar approach will be implemented. The autocomplete functionality will leverage the structured `mcnp_input` class to suggest relevant MCNP keywords and parameters as the user types. This will not only enhance the user experience by providing real-time suggestions but also help in minimizing syntax errors by suggesting only valid options based on the current context within the file. The autocomplete system will be context-aware, adjusting its suggestions based on the specific block the user is editing (e.g., within a cell block, surface block, or material block), ensuring that the suggestions are always relevant and helpful.
 
 
-The MCNP error popu is handled by errorcollection
+The MCNP error popup is handled by errorcollection
 
 The error class instances are created in two locations:
 -  file_parser class if instance creation failed this produces error. 
 -  in main handler class after mcnp_input is already created and separate parts are validated by the validator class
+
+## Attributed Files
+
+This repository includes a JSON data file (data/mcnp.tmSnippets.json) originally created by repositony https://github.com/repositony/vscode_mcnp.git . It is licensed under the GNU General Public License v3.0. You can find the full text of the license in the LICENSE file.
