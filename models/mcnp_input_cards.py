@@ -331,6 +331,8 @@ class Cell(object):
         else:
             trimmed_line = match.group(4)
 
+        # Remove "imp" and everything that follows it
+        trimmed_line = re.sub(r'imp.*', '', trimmed_line)
         
         all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
         all_entries = [entry.lstrip("0") for entry in all_entries]
