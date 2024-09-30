@@ -320,7 +320,8 @@ class Cell(object):
         self.material = new_material
     @classmethod
     def create_from_input_line(cls, line, comment=None):
-        match = re.search(r'(\d+)\s+(\d+)\s+(\S+)\s+(.*)', line)
+        # digit space digit space string space anything and optional space and imp
+        match = re.search(r'(\d+)\s+(\d+)\s+(\S+)\s+(.*)(\s+imp.*)?', line)
         cell_id = validate_return_id_as_int(match.group(1))
         material_id = validate_return_id_as_int(match.group(2))
         
@@ -332,10 +333,21 @@ class Cell(object):
 
         
         all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
-        all_entries = [surface.lstrip("0") for surface in all_entries]
-        surfaces = [surface for surface in all_entries if surface.isdigit()]
-        cells = [cell.strip("#") for cell in all_entries if "#" in cell]
+        all_entries = [entry.lstrip("0") for entry in all_entries]
+        surfaces = [] # [surface for surface in all_entries if surface.isdigit()]
+        cells =[] # [cell.strip("#") for cell in all_entries if "#" in cell]
 
+        error_message = None
 
+        for entry in all_entries:
+            try:
+                if "#" in entry:
+                    cells.append(int(entry.strip("#")))
+                else:
+                    surfaces.append(int(entry))
+            except ValueError as e:
+                error_message = "Cell entry '{}' is not a digit: {}".format(entry, e)
+                return cls(cell_id, material_id, [None], [None], None), error_message
+            
         return cls(cell_id, material_id, surfaces, cells, None), None
 
