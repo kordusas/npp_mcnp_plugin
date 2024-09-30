@@ -126,6 +126,15 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         cell_id = validate_return_id_as_int(cell_id)
 
         self.logger.debug("Cell id selected: {}".format(cell_id))
+        all_cell_mentions = []
+        # find all the cells which have the selected cell id mentioned in the mcnp input
+        for id in self.mcnp_input.cells:
+            if cell_id in self.mcnp_input.cells[id].cells:
+                self.logger.debug("Found #{} in the input of cell with id  {}".format(cell_id,id ))
+                all_cell_mentions.append(id)
+        if all_cell_mentions:
+            return {"type": "cell_id", "value": "entry #{} is present in cells with id's  {}".format(cell_id, all_cell_mentions)}
+        
         return {"type": "cell_id", "value": "selected cell {}".format(cell_id)}
     
     def _handle_material_id_selected(self):

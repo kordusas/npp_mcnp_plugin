@@ -35,7 +35,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 ### Cells Block Information
 - **Status**: Partially Implemented
 - **Description**: For cell blocks, 
-- selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model. (need to create popup message)
+- selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model. (completed)
 - Selecting the material popups info about the material. (completed)
 - selecting surfaces popups information about the selected surfaces. (completed)
 
@@ -60,8 +60,9 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
    -  +f6 tally doesnt have a particle identifier
    -  tally parameters (cells or surfaces) are missing
    -  tally is missing
-   -  surface type is valid
+   -  surface type is invalid
    -  transformation parameters are missing
+   -  cell entries(surface or #cell) are not integers
 
 
 ## Installation
@@ -104,10 +105,10 @@ The `on_selection` function is where the magic happens. It:
 For the autocomplete feature, a similar approach will be implemented. The autocomplete functionality will leverage the structured `mcnp_input` class to suggest relevant MCNP keywords and parameters as the user types. This will not only enhance the user experience by providing real-time suggestions but also help in minimizing syntax errors by suggesting only valid options based on the current context within the file. The autocomplete system will be context-aware, adjusting its suggestions based on the specific block the user is editing (e.g., within a cell block, surface block, or material block), ensuring that the suggestions are always relevant and helpful.
 
 
-The MCNP error popup is handled by errorcollection
+The MCNP error popup is handled by error collection
 
 The error class instances are created in two locations:
--  file_parser class if instance creation failed this produces error. 
+-  file_parser class if instance creation failed this produces error and if possible returns incomplete instance and error message 
 -  in main handler class after mcnp_input is already created and separate parts are validated by the validator class
 
 ## Attributed Files
