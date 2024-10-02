@@ -13,12 +13,18 @@ class InputValidator(object):
         self.surface_info = initialise_json_data('surface_info.json')
         self.particle_designators_info = initialise_json_data('particle_designators_info.json')
 
-    def validate_cell(self, cell):
+    def validate_cell(self, cell, existing_surface_ids):
         """
         Validates a cell object and returns an error code and message if necessary.
         """
         if not isinstance(cell, Cell):
             return "CELL_INVALID_OBJECT", "Invalid cell object. Expected a Cell object."
+        
+        invalid_surfaces = filter(lambda surface_key: surface_key not in existing_surface_ids, cell.surfaces) if cell.surfaces else []
+        if invalid_surfaces:
+            return "CELL_INVALID_SURFACES", "Cell ID {} invalid surface(s) {}.".format(cell.id, invalid_surfaces)
+        if cell.surfaces is None:
+            return "CELL_NO_SURFACES", "Cell ID {} has no surfaces.".format(cell.id)
         return None, None
 
     def validate_surface(self, surface):

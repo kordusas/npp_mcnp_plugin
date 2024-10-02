@@ -17,7 +17,7 @@ def validate_mcnp_model(mcnp_input, mcnp_error_collection, validator):
 
     # Validate Cells
     for cell_id, cell in mcnp_input.cells.items():
-        error_code, error_message = validator.validate_cell(cell)
+        error_code, error_message = validator.validate_cell(cell, mcnp_input.surfaces.keys())
         if error_message:
             mcnp_error_collection.add_error(ErrorModel(str(cell), error_message, error_code))
 

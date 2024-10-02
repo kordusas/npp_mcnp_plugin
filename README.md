@@ -63,6 +63,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
    -  surface type is invalid
    -  transformation parameters are missing
    -  cell entries(surface or #cell) are not integers
+   -  cell surface entries exist
 
 
 ## Installation
