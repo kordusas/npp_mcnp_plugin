@@ -45,3 +45,25 @@ def get_char_from_args(args):
     except Exception as e:
         console.write("Error in on_character_added: {}".format(str(e)))
         return None
+    
+
+
+def find_by_key_and_prefix(search_prefix, json_data, search_key_string=None):
+    """
+    This function searches through JSON data to find entries with a matching prefix in the value
+    and an optional search string in the key.
+
+    Args:
+        search_prefix (str): The prefix to match within the value's prefix field.
+        json_data (dict): The JSON data to search in.
+        search_key_string (str, optional): The string to search for in the keys. Defaults to None.
+
+    Returns:
+        dict: The information associated with the matching entry if found, otherwise None.
+    """
+    for key, value in json_data.items():
+        if search_key_string is not None and search_key_string.lower() not in key.lower():
+            continue
+        if value["prefix"][0].lower() == search_prefix.lower():
+            return value.get("body")
+    return None   

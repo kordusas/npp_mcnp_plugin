@@ -1,5 +1,5 @@
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally, Isotope
-from npp_mcnp_plugin.utils.general_utils import initialise_json_data
+from npp_mcnp_plugin.utils.general_utils import initialise_json_data, find_by_key_and_prefix
 from Npp import notepad
 import os, json
 
@@ -12,6 +12,7 @@ class InputValidator(object):
     def __init__(self):
         self.surface_info = initialise_json_data('surface_info.json')
         self.particle_designators_info = initialise_json_data('particle_designators_info.json')
+        self.physics_and_macrobodies_info = initialise_json_data("mcnp.tmSnippets.json")
 
     def validate_cell(self, cell, existing_surface_ids):
         """
@@ -20,10 +21,10 @@ class InputValidator(object):
         if not isinstance(cell, Cell):
             return "CELL_INVALID_OBJECT", "Invalid cell object. Expected a Cell object."
         
-        invalid_surfaces = filter(lambda surface_key: surface_key not in existing_surface_ids, cell.surfaces) if cell.surfaces else []
+        invalid_surfaces = filter(lambda surface_key: surface_key not in existing_surface_ids, cell.surfaces) if cell.surfaces else None
         if invalid_surfaces:
             return "CELL_INVALID_SURFACES", "Cell ID {} invalid surface(s) {}.".format(cell.id, invalid_surfaces)
-        if cell.surfaces is None:
+        if not cell.surfaces:
             return "CELL_NO_SURFACES", "Cell ID {} has no surfaces.".format(cell.id)
         return None, None
 
@@ -36,7 +37,9 @@ class InputValidator(object):
         if not isinstance(surface, Surface):
             return "SURFACE_INVALID_OBJECT", "Invalid surface object. Expected a Surface object."
         if surface.surface_type not in valid_surface_types:
-            return "SURFACE_INVALID_TYPE", "Surface ID {} invalid surface type {}.".format(surface.id, surface.surface_type)
+            surface_info_body = find_by_key_and_prefix(surface.surface_type, self.physics_and_macrobodies_info)
+            if surface_info_body is None:
+                return "SURFACE_INVALID_TYPE", "Surface ID {} invalid surface type {}.".format(surface.id, surface.surface_type)
         return None, None
 
     def validate_transformation(self, transformation):
