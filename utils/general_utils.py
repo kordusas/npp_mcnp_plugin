@@ -62,8 +62,8 @@ def find_by_key_and_prefix(search_prefix, json_data, search_key_string=None):
         dict: The information associated with the matching entry if found, otherwise None.
     """
     for key, value in json_data.items():
-        if search_key_string is not None and search_key_string.lower() not in key.lower():
+        if search_key_string is not None and search_key_string not in key.lower():
             continue
-        if value["prefix"][0].lower() == search_prefix.lower():
+        if value["prefix"][0].lower() == search_prefix:
             return value.get("body")
     return None   

@@ -1,7 +1,8 @@
 from abc import ABCMeta, abstractmethod
 import logging
-from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int, initialise_json_data
+from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int, initialise_json_data, find_by_key_and_prefix
 surface_info = initialise_json_data("surface_info.json")
+physics_and_macrobodies_info = initialise_json_data("mcnp.tmSnippets.json")
 import re
 
 def BlockPreseterFactory(block_type,  model_of_current_line, mcnp_input, notifier):
@@ -163,15 +164,12 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         # get second entry in the line which is material id
         material_id = validate_return_id_as_int(self.model_of_selected_line.current_line_list[1])
 
-        
         # if material is not void then cell definition starts after third entry(index is 0 based)
         index_of_token = 2
         # if material is void then then cell definition starts after second entry(1ist index is 0 based
         if material_id == 0:
             self.logger.debug("Material is void")
             index_of_token = 1 
-        
-            
         
         cell_definition_start = self.model_of_selected_line.find_space_separated_token_end_positions(index_of_token)
         self.logger.debug( "Cell definition start: {}".format(cell_definition_start))
@@ -262,8 +260,18 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
         Handle the selected surface type.
         """
         surface_type = self.model_of_selected_line.first_entry_in_selection
-        self.logger.debug( "Surface type selected: {}".format(surface_type))
-        return {"type": "surface_type", "value": surface_info.get(surface_type, "Surface type not found...")}
+        self.logger.debug("Surface type selected: {}".format(surface_type))
+    
+        # Try to find the surface type in surface_info first, then in physics_and_macrobodies_info
+        message = surface_info.get(surface_type, None) or find_by_key_and_prefix(surface_type.lower(), physics_and_macrobodies_info, search_key_string="macrobody")
+    
+        if message is None:
+            message = "Surface type not found..."
+    
+        message = format_notifier_message(message)
+    
+        return {"type": "surface_type", "value": message}
+        
     
     def _handle_transformation_selected(self):
         """
@@ -296,4 +304,3 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
 
         
 
-        

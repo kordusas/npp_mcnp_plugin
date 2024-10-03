@@ -37,7 +37,7 @@ class InputValidator(object):
         if not isinstance(surface, Surface):
             return "SURFACE_INVALID_OBJECT", "Invalid surface object. Expected a Surface object."
         if surface.surface_type not in valid_surface_types:
-            surface_info_body = find_by_key_and_prefix(surface.surface_type, self.physics_and_macrobodies_info)
+            surface_info_body = find_by_key_and_prefix(surface.surface_type, self.physics_and_macrobodies_info, search_key_string="macrobody")
             if surface_info_body is None:
                 return "SURFACE_INVALID_TYPE", "Surface ID {} invalid surface type {}.".format(surface.id, surface.surface_type)
         return None, None
