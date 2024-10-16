@@ -21,10 +21,11 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 - **Description**: A future enhancement to introduce an autocomplete feature that suggests MCNP keywords and parameters as you type. This aims to boost productivity by offering real-time suggestions and minimizing syntax errors. The feature will be context-aware, providing suggestions based on the specific block you are working in:
   - **In Cell Block**:
     - Suggest autocomplete surface ID during typing from the available surface dictionary. 
-    - suggest autocoplete the cell name after #. 
+    - suggest autocoplete the cell name after "#\d+". (completed)
     - Suggest a new cell ID after a newline in the cell block. 
-    - Suggest a material ID; a popup should provide basic info about the material, such as the comment line of the material or top isotopes in abundance.
-    - Suggest available transformations after typing "trcl". 
+    - Suggest a material ID after one digit is typed;(completed)
+    - Suggest available transformations after typing "trcl=\d+".  (completed)
+    - add popup for the selections to provide basic information about the card
   - **In Surface Block**:
     - Suggest a new surface ID after a newline.
     - Auto-popup to show available transformations when typed "\tr".

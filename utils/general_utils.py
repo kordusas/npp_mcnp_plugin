@@ -29,7 +29,9 @@ def format_notifier_message(items_to_show):
     Returns:
         str: The formatted message.
     """
-    if isinstance(items_to_show, str):
+    if items_to_show is None:
+        return None
+    elif isinstance(items_to_show, str):
         return items_to_show
     elif isinstance(items_to_show, list):
         return '\n'.join([str(item) for item in items_to_show])

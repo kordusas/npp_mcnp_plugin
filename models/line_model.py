@@ -178,4 +178,15 @@ class ModelOfLine(object):
         if token_index < len(matches):
             match = matches[token_index]
             return match.end()
-        return None 
+        return None
+    @property
+    def is_cursor_at_material(self):
+        """
+        Determine if the cursor is at a material definition 
+        only usable within a cell block.
+
+        Returns:
+            bool: True if the cursor is at a material definition, False otherwise.
+        """
+        # strip line into list, if there is only two elements in the list then it is likely we are adding a material
+        return len(self.text_till_cursor_list) == 2 

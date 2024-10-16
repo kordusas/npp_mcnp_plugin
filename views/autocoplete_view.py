@@ -13,11 +13,15 @@ class AutocompleteNotification():
         return cls._instance
     def __init__(self):
         pass
-    def _popup_notification(self, message):
-        editor.autoCShow(0, message)
-     
+    
     def notify(self, analysis_result):
-        action_type = analysis_result.get("type")
+        """
+        SCI_AUTOCSETSEPARATOR(int separatorCharacter)
+        SCI_AUTOCGETSEPARATOR -> int
+        These two messages set and get the separator character used to separate words in the SCI_AUTOCSHOW list. The default is the space character.
+        https://www.scintilla.org/ScintillaDoc.html#SCI_AUTOCCOMPLETE
+        """
         value = analysis_result.get("value")
+        entry_length = analysis_result.get("entry_length", 0)
         if value:
-            self._popup_notification(analysis_result["value"])
+            editor.autoCShow(entry_length, value)

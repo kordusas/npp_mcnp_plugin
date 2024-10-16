@@ -38,7 +38,6 @@ class SelectionNotification():
         :return: None
         :rtype: None
         """        
-        action_type = analysis_result.get("type")
         value = analysis_result.get("value")
         if value:
             # if surface type is selected we find description in the dict and popup message

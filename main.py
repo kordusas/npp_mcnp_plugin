@@ -18,6 +18,7 @@ CHAR_SPACE = " "
 CHAR_L = "l"
 CHAR_HASH = "#"
 from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory
+from npp_mcnp_plugin.presenters.autocomplete_presenter import BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
 class editorHandler:
     def __init__(self, selection_notifier, error_notifier, autocomplete_notifier):
@@ -26,7 +27,9 @@ class editorHandler:
         self.autocomplete_notifier = autocomplete_notifier
         self.logger = logging.getLogger(self.__class__.__name__)
         
-        
+
+        # setting autocoplete separator as a new line character
+        editor.autoCSetSeparator(ord("\n"))
         # initialisng parser instance from file cls method 
         self._initialise_parser_and_mcnp_input()
         
@@ -92,16 +95,26 @@ class editorHandler:
             if char_added == CHAR_PERIOD:
                 self.logger.info("Period character added")
                 #handle_period_character()
-            elif char_added != CHAR_SPACE:
+            elif char_added != CHAR_SPACE and char_added != "\n":
                 self.logger.info("None space character added")
-                self.handle_non_space_character(char_added)
-
-    def handle_non_space_character(self, char_added):
+                self.handle_character(char_added)
+    def handle_character(self, char_added): 
         model_of_current_line = ModelOfLine.from_notepad()
-        if  model_of_current_line.is_comment_line:
-            return 
-        
+
         self.logger.info("char added in non comment line")
+
+        block_type = self.mcnp_input.return_block_type(model_of_current_line.current_line_no)
+        self.logger.info("Block type is: %s", block_type)
+
+        # *** Create and use the Autocomplete Presenter ***
+        autocomplete_presenter = BlockAutoCompletePresenterFactory(
+            block_type, 
+            model_of_current_line=model_of_current_line, 
+            mcnp_input=self.mcnp_input, 
+            notifier=self.autocomplete_notifier
+        )
+        self.autocompletion_data = autocomplete_presenter.pop_suggestions() 
+        
         #autocomplete_cell_block_logic(self.parsed_file, current_line_instance, char_added)
 
 
