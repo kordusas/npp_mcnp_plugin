@@ -51,7 +51,7 @@ class AbstractBlockSelectionPresenter(object):
 
 class CellBlockPresenter(AbstractBlockSelectionPresenter):
     def __init__(self, model_of_current_line, mcnp_input, notifier):
-        super(CellBlockPresenter, self).__init__(model_of_current_line, mcnp_input, notifier,)   
+        super(CellBlockPresenter, self).__init__(model_of_current_line, mcnp_input, notifier)   
     """
     This class is used to handle the selection of cell blocks of text.
     """
