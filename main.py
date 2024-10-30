@@ -15,21 +15,18 @@ import logging
 
 CHAR_PERIOD = "."
 CHAR_SPACE = " "
-CHAR_L = "l"
-CHAR_HASH = "#"
 from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory
 from npp_mcnp_plugin.presenters.autocomplete_presenter import BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
-class editorHandler:
+
+class EditorHandler:
     def __init__(self, selection_notifier, error_notifier, autocomplete_notifier):
         self.selection_notifier = selection_notifier
         self.error_notifier = error_notifier
         self.autocomplete_notifier = autocomplete_notifier
         self.logger = logging.getLogger(self.__class__.__name__)
-        
+        self.autocompletion_data = None
 
-        # setting autocoplete separator as a new line character
-        editor.autoCSetSeparator(ord("\n"))
         # initialisng parser instance from file cls method 
         self._initialise_parser_and_mcnp_input()
         
@@ -38,6 +35,8 @@ class editorHandler:
         editor.callbackSync(self.on_select, [SCINTILLANOTIFICATION.UPDATEUI])
         editor.callbackSync(self.on_character_added, [SCINTILLANOTIFICATION.CHARADDED])
         notepad.callback(self.on_document_saved, [NOTIFICATION.FILESAVED])
+        editor.callback(self.on_autocompletion_selection, [SCINTILLANOTIFICATION.AUTOCSELECTIONCHANGE])
+
         pass
     def _initialise_parser_and_mcnp_input(self):
         """
@@ -91,12 +90,10 @@ class editorHandler:
         
     def on_character_added(self, args):
             char_added = get_char_from_args(args)
-
-            if char_added == CHAR_PERIOD:
-                self.logger.info("Period character added")
-                #handle_period_character()
-            elif char_added != CHAR_SPACE and char_added != "\n":
-                self.logger.info("None space character added")
+            model_of_current_line = ModelOfLine.from_notepad()
+                
+            if (char_added.isdigit() or char_added == "#") and not is_comment_line(model_of_current_line.current_line):
+                self.logger.info("None space character added ")
                 self.handle_character(char_added)
     def handle_character(self, char_added): 
         model_of_current_line = ModelOfLine.from_notepad()
@@ -115,14 +112,33 @@ class editorHandler:
         )
         self.autocompletion_data = autocomplete_presenter.pop_suggestions() 
         
-        #autocomplete_cell_block_logic(self.parsed_file, current_line_instance, char_added)
+    def on_autocompletion_selection(self, selection):
+        """
+        This function is triggered when the user selects an item in the autocompletion list.
+        """
 
+        if not self.autocompletion_data:
+            return
+        selected_text = editor.autoCGetCurrentText()
+
+        if selected_text:
+            # Look up the selected text in the autocompletion data dictionary
+            metadata = self.autocompletion_data.get("type", None)
+
+            if metadata=="material" or metadata=="surface":
+                # Print the selected item along with its type and info
+                self.logger.info("Type of selection: {}, selected text: {} ".format(metadata, selected_text))
 
 if __name__ == "__main__":
     configure_logging(enable_logging=True)
+
     selection_notifier = SelectionNotification()
-    error_notifier = ErrorView()
+    error_view = ErrorView()
     autocomplete_notifier = AutocompleteNotification()
 
-    handler = editorHandler(selection_notifier, error_notifier, autocomplete_notifier)
-    handler.register_callbacks()
+    # Setting autocomplete separator as a new line character
+    editor.autoCSetSeparator(ord("\n"))
+
+    # Renamed the handler for consistency and clarity
+    editor_handler = EditorHandler(selection_notifier, error_view, autocomplete_notifier)
+    editor_handler.register_callbacks()
