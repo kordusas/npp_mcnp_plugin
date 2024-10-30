@@ -5,6 +5,37 @@ surface_info = initialise_json_data("surface_info.json")
 physics_and_macrobodies_info = initialise_json_data("mcnp.tmSnippets.json")
 import re
 
+def is_column_at_cell_definition(model_of_current_line, cursor_or_selection_column):
+        """
+        Check if the cursor or selection column is at the start of a cell definition.
+
+        Args:
+        model_of_current_line (ViewOfCurrentLine): The view of the current line containing the selected text.
+        cursor_or_selection_column (int): The column position of the cursor or selection.
+
+        Returns:
+        bool: True if the cursor or selection column is at the start of a cell definition, False otherwise.
+        """
+        # get second entry in the line which is material id
+        material_id = validate_return_id_as_int(model_of_current_line.current_line_list[1])
+
+        # if material is not void then cell definition starts after third entry(index is 0 based)
+        index_of_token = 2
+        # if material is void then then cell definition starts after second entry(1ist index is 0 based
+        if material_id == 0:
+            index_of_token = 1 
+        
+        cell_definition_start = model_of_current_line.find_space_separated_token_end_positions(index_of_token)
+        if cursor_or_selection_column < cell_definition_start:
+            return False
+        
+        # if cursor is after letters (imp, vol etc..) we are past the cell definition
+        if bool(re.search(r'[a-zA-Z]', model_of_current_line.text_till_cursor)):
+            return False
+
+        return True
+
+
 def BlockPreseterFactory(block_type,  model_of_current_line, mcnp_input, notifier):
     """
     This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
@@ -113,8 +144,9 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
     def should_ignore_selection(self):
         """
         This function checks if the selection should be ignored.
+        currently we do nothing if this is a lattice line.
         """
-        if self.model_of_selected_line.is_lattice_line or self.model_of_selected_line.is_selection_after_pattern("imp"):
+        if self.model_of_selected_line.is_lattice_line:
             self.logger.info("Ignore line")
             return True
         return False
@@ -136,7 +168,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         if all_cell_mentions:
             return {"type": "cell_id", "value": "entry #{} is present in cells with id's  {}".format(cell_id, all_cell_mentions)}
         
-        return {"type": "cell_id", "value": "selected cell {}".format(cell_id)}
+        return None
     
     def _handle_material_id_selected(self):
         """
@@ -161,23 +193,9 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
     
     def is_cell_definition_selected(self):
         self.logger.debug( "Called method is_cell_definition_selected")
-        # get second entry in the line which is material id
-        material_id = validate_return_id_as_int(self.model_of_selected_line.current_line_list[1])
 
-        # if material is not void then cell definition starts after third entry(index is 0 based)
-        index_of_token = 2
-        # if material is void then then cell definition starts after second entry(1ist index is 0 based
-        if material_id == 0:
-            self.logger.debug("Material is void")
-            index_of_token = 1 
-        
-        cell_definition_start = self.model_of_selected_line.find_space_separated_token_end_positions(index_of_token)
-        self.logger.debug( "Cell definition start: {}".format(cell_definition_start))
-        self.logger.debug( "Selection end: {}".format(self.model_of_selected_line.selection_end))
-        if self.model_of_selected_line.selection_start < cell_definition_start:
-            self.logger.debug( "Cell definition is not selected")
-            return False
-        return True
+        return is_column_at_cell_definition(self.model_of_selected_line, self.model_of_selected_line.selection_start)
+
     
     def analyze_selection(self):
         """
