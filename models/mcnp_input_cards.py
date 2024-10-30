@@ -275,71 +275,106 @@ class Material(Printable):
 
 class Cell(object):
     """
-    cell_id is int
-
-    material is a Material object
-    surfaces is a list of surface ids
-    cells is a list of cell ids i need to exclude using #
-    importance is a dict of particle type as str and importance value in float
-    Note:
-    Technically i could have the Cell as a dict object itself i think without issues.
-    But it would be useful to have methods like print cell which would write the cell in the correct format. - could be cell handler 
-    but i think Cell add could be very clear, then i can just sum the cells. very easy logic. 
-    Maybe I could also do the same for surfaces cell.add_cell(to make union of the cells)
-    cell_exclude_cell(could make expansion of the exclusion)
-       union could be 
+    Represents a Cell with material, surfaces, excluded cells, and other attributes.
     """
-    def __init__(self, cell_id, material_id, surfaces, cells, importance):
+
+    def __init__(self, cell_id, material_id, surfaces=None, cells=None, importance=None, universe=None, volume=None):
         assert isinstance(cell_id, int), "cell_id must be an int"
         assert isinstance(material_id, int), "material_id must be an int"
         assert isinstance(surfaces, list), "surfaces must be a list"
         assert isinstance(cells, list), "cells must be a list"
-        #assert isinstance(importance, dict), "importance must be a dict"
+        assert isinstance(importance, dict) or importance is None, "importance must be a dict or None"
+        assert isinstance(universe, (int, type(None))), "universe must be an int or None"
+        assert isinstance(volume, (float, type(None))), "volume must be a float or None"
+        
         self.id = cell_id
         self.material_id = material_id
-        self.surfaces = surfaces
-        self.cells = cells
-        self.importance = importance
+        self.surfaces = surfaces if surfaces else []
+        self.cells = cells if cells else []
+        self.importance = importance or {}
+        self.universe = universe
+        self.volume = volume
 
     def __str__(self):
-        return "Cell %s: Material ID %s, Surfaces %s, Cells %s, Importance %s" % (self.id, self.material_id, self.surfaces, self.cells, self.importance)
-    def print_output(self):
-        """
-        Alternative printing method for the cell object when writting mcnp_input_file
-        """
-        return "%s: Material ID %s, Surfaces %s, Cells %s, Importance %s" % (self.id, self.print_output, self.surfaces, self.cells, self.importance)
+        return "Cell {}: Material ID {}, Surfaces {}, Cells {}, Importance {}".format(
+            self.id, self.material_id, self.surfaces, self.cells, self.importance
+        )
 
-    def replace_surface(self, old_surface_id, new_surface):
+    def replace_surface(self, old_surface_id, new_surface_id):
+        """Replaces an existing surface ID with a new one."""
+        try:
+            idx = self.surfaces.index(old_surface_id)
+            self.surfaces[idx] = new_surface_id
+        except ValueError:
+            pass  # old_surface_id not found
+
+    def replace_material(self, new_material_id):
+        """Replaces the material ID with a new material."""
+        assert isinstance(new_material_id, int), "new_material_id must be an int"
+        self.material_id = new_material_id
+
+class CellFactory:
+    """
+    Factory for creating and parsing Cell instances.
+    """
+
+    @staticmethod
+    def create_from_input_line(line, comment=None):
         """
-        looks through the self.surface dictionary and replaces the old surface with the new surface changing the id
+        Parses an input line and creates a Cell instance.
         """
-        if old_surface_id in self.surfaces:
-            # replace list entry in surfaces of old surface id with new surface id
-            self.surfaces[self.surfaces.index(old_surface_id)] = new_surface.surface_id
-    def replace_material(self, old_material_name, new_material):
-        self.material = new_material
-    @classmethod
-    def create_from_input_line(cls, line, comment=None):
-        # digit space digit space string space anything and optional space and imp
-        match = re.search(r'(\d+)\s+(\d+)\s+(\S+)\s+(.*)(\s+imp.*)?', line)
-        cell_id = validate_return_id_as_int(match.group(1))
-        material_id = validate_return_id_as_int(match.group(2))
+        match = re.match(r'^(.*?)([volpumiat].*)', line)
+        before_alpha = match.group(1)
+        after_alpha = match.group(2)
         
-        # checking if the material is void
+
+        match = re.search(r'(\d+)\s+(\d+)\s+(\S+)\s+(.*)?', before_alpha)
+        if not match:
+            raise ValueError("Input line format is invalid")
+
+        cell_id = validate_return_id_as_int( match.group(1))
+        material_id = validate_return_id_as_int(match.group(2))
+
+        if after_alpha:
+            universe, volume = CellFactory._parse_universe_and_volume(after_alpha)
+        else:
+            universe, volume = None, None
+        
+        surfaces, cells, error_message = CellFactory._parse_surfaces_and_cells(match, material_id)
+
+        # Placeholder for importance dictionary; can be extended as needed
+        importance = {}  
+        return Cell(cell_id, material_id, surfaces, cells, importance, universe, volume), error_message
+
+
+    @staticmethod
+    def _parse_universe_and_volume(line):
+        """Extracts the universe value if present."""
+        match_universe = re.search(r'u=(\d+)', line)
+        match_universe = validate_return_id_as_int(match_universe.group(1)) if match_universe else None
+
+        match_volume = re.search(r'vol=([\d.]+)', line)
+        match_volume = float(match_volume.group(1)) if match_volume else None
+
+        return match_universe, match_volume
+
+
+    @staticmethod
+    def _parse_surfaces_and_cells(match, material_id):
+        """
+        Parses surfaces and cell exclusions from the match object.
+        """
         if material_id == 0:
+            print("material is 0")
             trimmed_line = match.group(3) + match.group(4)
         else:
             trimmed_line = match.group(4)
 
-        # Remove "imp" and everything that follows it
-        trimmed_line = re.sub(r'imp.*', '', trimmed_line)
-        
         all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
         all_entries = [entry.lstrip("0") for entry in all_entries]
-        surfaces = [] # [surface for surface in all_entries if surface.isdigit()]
-        cells =[] # [cell.strip("#") for cell in all_entries if "#" in cell]
 
-        error_message = None
+        surfaces = []
+        cells = []
 
         for entry in all_entries:
             try:
@@ -349,7 +384,6 @@ class Cell(object):
                     surfaces.append(int(entry))
             except ValueError as e:
                 error_message = "Cell entry '{}' is not a digit: {}".format(entry, e)
-                return cls(cell_id, material_id, [None], [None], None), error_message
-            
-        return cls(cell_id, material_id, surfaces, cells, None), None
+                return surfaces, cells, error_message
 
+        return surfaces, cells, None

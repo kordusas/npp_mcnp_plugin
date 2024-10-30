@@ -1,5 +1,5 @@
 from Npp import editor, console
-from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material, Cell
+from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material, CellFactory
 from npp_mcnp_plugin.models.error import  ErrorModel
 from npp_mcnp_plugin.utils.input_validator import InputValidator
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_match_at_start
@@ -141,7 +141,6 @@ class FileParser(object):
                 # returns instance and error message if any during the instance creation
                 instance, error_message = create_instance_func(line, comment)
                 
-
                 if error_message:
                     self.error_collection.add_error(ErrorModel(line, error_message,  "INVALID_DATA"))
                 if instance:
@@ -184,7 +183,7 @@ class FileParser(object):
         self.logger.debug("Parsing cells")
         return self._parse_block(self.block["cells"],
             regex_pattern='(\d+)\s+(\d+)\s+(\S+)\s+(.*)',
-            create_instance_func=Cell.create_from_input_line,
+            create_instance_func=CellFactory.create_from_input_line,
         )    
     def get_physics(self):
         information_dict = {}
