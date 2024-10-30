@@ -1,10 +1,12 @@
 
 from abc import ABCMeta, abstractmethod
 from npp_mcnp_plugin.utils.string_utils import return_list_entries_starting_with_string
-from npp_mcnp_plugin.utils.general_utils import format_notifier_message
+from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int
+from presenter_utils import is_column_at_cell_definition
 import logging
 import re
 from Npp import editor
+
 
 def BlockAutoCompletePresenterFactory(block_type,  model_of_current_line, mcnp_input, notifier):
     """
@@ -95,12 +97,18 @@ class CellBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
         elif self.model_of_current_line.is_cursor_at_material:
              message = self._autocoplete_ids(first_digits=new_entry_digits,my_list_of_ids=self.mcnp_input.materials.keys())
              mytype = "material"
-        
+
+        elif new_entry.isdigit() and self.is_cursor_at_cell_definition():
+             message = self._autocoplete_ids(first_digits=new_entry_digits,my_list_of_ids=self.mcnp_input.surfaces.keys())
+             mytype = "surface"
+
         self.logger.info("autocoplete type Found {} ".format(mytype))
-        self.logger.info("autocoplete selection {} ".format(editor.autoCGetCurrentText() )) # should show what is selected but didnt work out
-        # making sure all are strings
  
         return  {"type": mytype, "value": format_notifier_message(message) , "entry_length": entry_length}
+
+    def is_cursor_at_cell_definition(self):
+        return is_column_at_cell_definition(self.model_of_current_line, self.model_of_current_line.cursor_column)
+
     
 class PhysicsBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
     def __init__(self, model_of_current_line, mcnp_input, notifier):
