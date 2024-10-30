@@ -30,7 +30,7 @@ class ModelOfLine(object):
         return instance
 
 
-    def is_selection_after_pattern(self, pattern):
+    def is_pattern_before_cursor(self, pattern):
         return pattern in self.text_till_cursor
         
     @property
@@ -115,11 +115,13 @@ class ModelOfLine(object):
             2. If the current line is a continuation line (starts with four spaces)  the text from the previous line(s) is prepended to the current line until a non-continuation line is encountered. If the resulting text contains the keyword 'fill', the line is considered a lattice line.
         """
         self.logger.debug("Called method is_lattice_line")
-        full_line = self.get_full_mcnp_input_line()
+        
         if "fill" in self.current_line:
             fill_index = self.current_line.find("fill")
             if self.cursor_column > fill_index:
                 return True
+        # checking if there is keyword fill earlier
+        full_line = self.get_full_mcnp_input_line()
         if "fill" in full_line:
                 return True
 
