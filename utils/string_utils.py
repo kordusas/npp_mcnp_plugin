@@ -33,3 +33,17 @@ def return_list_entries_starting_with_string(my_list, string):
         list: A list of entries that start with the specified string.
     """
     return [str(key) for key in my_list if str(key).startswith(string)]
+
+def extract_keyword_value(line, keyword):
+        """
+        Extracts the value associated with a keyword in a string.
+
+        Args:
+            line: The input string.
+            keyword: The keyword to search for.
+
+        Returns:
+            The value associated with the keyword, or None if the keyword is not found.
+        """
+        match = re.search(r'{}\s*=\s*(\S+)'.format(keyword), line)
+        return match.group(1) if match else None
