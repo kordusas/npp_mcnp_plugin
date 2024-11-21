@@ -1,6 +1,12 @@
 from abc import ABCMeta, abstractmethod
-from npp_mcnp_plugin.utils.general_utils import validate_return_id_as_int, initialise_json_data
+try: 
+    from npp_mcnp_plugin.utils.general_utils import validate_return_id_as_int, initialise_json_data
+    from npp_mcnp_plugin.utils.string_utils import extract_keyword_value
+except ImportError:
+    from utils.general_utils import validate_return_id_as_int, initialise_json_data
+    from utils.string_utils import extract_keyword_value
 import re
+import logging
 natural_abundances = initialise_json_data("natural_abundances.json")
 class Printable(object):
     __metaclass__ = ABCMeta
@@ -278,7 +284,7 @@ class Cell(object):
     Represents a Cell with material, surfaces, excluded cells, and other attributes.
     """
 
-    def __init__(self, cell_id, material_id, surfaces=None, cells=None, importance=None, universe=None, volume=None):
+    def __init__(self, cell_id, material_id, density, surfaces=None, cells=None, importance=None, universe=None, volume=None):
         assert isinstance(cell_id, int), "cell_id must be an int"
         assert isinstance(material_id, int), "material_id must be an int"
         assert isinstance(surfaces, list), "surfaces must be a list"
@@ -294,8 +300,14 @@ class Cell(object):
         self.importance = importance or {}
         self.universe = universe
         self.volume = volume
+        self.density = density
 
     def __str__(self):
+        if self.universe is not None and self.volume is not None:
+            return "Cell {}: Material ID {}, Surfaces {}, Cells {}, Importance {}, Universe {}, Volume {}".format(
+                self.id, self.material_id, self.surfaces, self.cells, self.importance, self.universe, self.volume
+            )
+        
         return "Cell {}: Material ID {}, Surfaces {}, Cells {}, Importance {}".format(
             self.id, self.material_id, self.surfaces, self.cells, self.importance
         )
@@ -317,73 +329,108 @@ class CellFactory:
     """
     Factory for creating and parsing Cell instances.
     """
-
+    logger = logging.getLogger(__name__)
     @staticmethod
     def create_from_input_line(line, comment=None):
         """
         Parses an input line and creates a Cell instance.
         """
-        match = re.match(r'^(.*?)([volpumiat].*)', line)
-        before_alpha = match.group(1)
-        after_alpha = match.group(2)
-        
+                            
+        before_alpha, after_alpha = CellFactory.split_line(line)
+        CellFactory.logger.debug("Split line: %s | %s", before_alpha, after_alpha)
 
-        match = re.search(r'(\d+)\s+(\d+)\s+(\S+)\s+(.*)?', before_alpha)
+        
+        # It extracts the following information:
+        #   match.group(1) - cell_id: A unique numerical identifier for the cell.
+        #   match.group(2) - mat number: The material number associated with the cell.
+        #   match.group(3) - cell definition: A string containing the cell's properties 
+        #                      (e.g., density, geometry).
+        match = re.search(r'(\d+)\s+(\d+)\s+(\S+.*)?', before_alpha)
+
         if not match:
             raise ValueError("Input line format is invalid")
 
         cell_id = validate_return_id_as_int( match.group(1))
         material_id = validate_return_id_as_int(match.group(2))
+        
+        # extracts the density and returns trimmed line containing only the cell definition
+        trimmed_line, density = CellFactory._extract_density(match.group(3), material_id)
+
+        surfaces, cells, error_message = CellFactory._parse_surfaces_and_cells(trimmed_line)
 
         if after_alpha:
             universe, volume = CellFactory._parse_universe_and_volume(after_alpha)
         else:
             universe, volume = None, None
-        
-        surfaces, cells, error_message = CellFactory._parse_surfaces_and_cells(match, material_id)
 
         # Placeholder for importance dictionary; can be extended as needed
         importance = {}  
-        return Cell(cell_id, material_id, surfaces, cells, importance, universe, volume), error_message
+        return Cell(cell_id, material_id, density, surfaces, cells, importance, universe, volume), error_message
 
+    @staticmethod
+    def _extract_importance(string):
+        return None
+    @staticmethod
+    def split_line(line):
+        """
+        Splits the line before and after the "volimpulatfill" characters. 
+        This way cell definition can be separated from the other keyword based cards within the cell
+        """
+        for i, char in enumerate(line):
+            if char in "volimpulatfill":
+                before_alpha = line[:i].strip()  # Use slicing up to i
+                after_alpha = line[i:].strip()  # Use slicing from i onwards
+                break
+        else:  # Handle the case where no relevant character is found
+            before_alpha = line.strip()
+            after_alpha = ""
+        return before_alpha, after_alpha
+    @staticmethod
+    def _extract_density(line, material_id):
+        if material_id != 0:
+            parts = line.split()
+            density = float(parts[0])
+            trimmed_line = " ".join(parts[1:])
+            return trimmed_line, density
+        
+        return line, 0
 
     @staticmethod
     def _parse_universe_and_volume(line):
-        """Extracts the universe value if present."""
-        match_universe = re.search(r'u=(\d+)', line)
-        match_universe = validate_return_id_as_int(match_universe.group(1)) if match_universe else None
+        """Extracts the universe and volume values if present."""
+        universe = extract_keyword_value(line, 'u')
+        universe = validate_return_id_as_int(universe) if universe else None
 
-        match_volume = re.search(r'vol=([\d.]+)', line)
-        match_volume = float(match_volume.group(1)) if match_volume else None
+        volume = extract_keyword_value(line, 'vol')
+        volume = float(volume) if volume else None
 
-        return match_universe, match_volume
-
+        return universe, volume
 
     @staticmethod
-    def _parse_surfaces_and_cells(match, material_id):
+    def _parse_surfaces_and_cells(trimmed_line):
         """
-        Parses surfaces and cell exclusions from the match object.
+        Parses surfaces and cell exclusions from the trimmed line.
+
+        Args:
+            trimmed_line: The input line containing surface and cell information.
+
+        Returns:
+            A tuple containing:
+              - A list of surfaces.
+              - A list of cell exclusions.
+              - An error message if an error occurred during parsing, otherwise None.
         """
-        if material_id == 0:
-            print("material is 0")
-            trimmed_line = match.group(3) + match.group(4)
-        else:
-            trimmed_line = match.group(4)
-
-        all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
-        all_entries = [entry.lstrip("0") for entry in all_entries]
-
         surfaces = []
         cells = []
-
-        for entry in all_entries:
-            try:
+        try:
+            all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
+            for entry in all_entries:
+                entry = entry.lstrip("0")  # Remove leading zeros
                 if "#" in entry:
                     cells.append(int(entry.strip("#")))
                 else:
                     surfaces.append(int(entry))
-            except ValueError as e:
-                error_message = "Cell entry '{}' is not a digit: {}".format(entry, e)
-                return surfaces, cells, error_message
-
-        return surfaces, cells, None
+            return surfaces, cells, None
+        except ValueError as e:
+            error_message = "Cell entry is not a valid integer: {}".format(e)
+            return surfaces, cells, error_message
