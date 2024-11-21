@@ -1,4 +1,4 @@
-from Npp import console
+
 import logging
 import os, json
 # Add the format_notifier_message function
@@ -45,7 +45,7 @@ def get_char_from_args(args):
     try:
         return chr(args['ch'])
     except Exception as e:
-        console.write("Error in on_character_added: {}".format(str(e)))
+        logging.error("Error in on_character_added: {}".format(str(e)))
         return None
     
 
