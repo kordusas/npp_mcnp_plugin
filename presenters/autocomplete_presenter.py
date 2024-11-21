@@ -51,6 +51,8 @@ class AbstractBlockAutoCompletePresenter(object):
         """
         Generate and provide autocomplete suggestions.
         """
+        # for not return empty dictionary
+        
         
 
 
@@ -59,7 +61,7 @@ class SurfaceBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
         super(SurfaceBlockAutoCompletePresenter, self).__init__(model_of_current_line, mcnp_input, notifier)
 
     def provide_autocomplete_suggestions(self):
-        pass  # Implement your surface autocomplete logic here
+        return {}  # Implement your surface autocomplete logic here
 
 
 class CellBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
@@ -115,4 +117,4 @@ class PhysicsBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
         super(PhysicsBlockAutoCompletePresenter, self).__init__(model_of_current_line, mcnp_input, notifier)
 
     def provide_autocomplete_suggestions(self):
-        pass  # Implement your physics autocomplete logic here
+        return {}  # Implement your physics autocomplete logic here
