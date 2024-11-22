@@ -112,7 +112,22 @@ class FileParser(object):
                 comment = ""
 
         return merged_block
+    
     def _remove_leading_spaces(self, line):
+        """
+        Removes leading spaces from a line if there are fewer than 4 spaces.
+
+        This method is used to handle indentation in MCNP input files. Lines with
+        fewer than 4 leading spaces are treated as new entries, while lines with
+        4 or more spaces are considered continuation lines.
+
+        Args:
+            line (str): The input line to process.
+
+        Returns:
+            str: The line with leading spaces removed if there were fewer than 4,
+                 otherwise the original line.
+        """
         if len(line) - len(line.lstrip(' ')) < 4:
             return line.lstrip(' ')
         return line
@@ -124,11 +139,11 @@ class FileParser(object):
     def _parse_block(self, block, regex_pattern, create_instance_func):
         """
         Generic method to parse a block of lines based on a regex pattern and create instances using a provided function.
+        Captures instance errors and passes them to the error collector
 
         Args:
             regex_pattern (str): The regex pattern to match lines.
             create_instance_func (function): The function to create an instance from a line and comment.
-            validate_func (function, optional): The function to validate the created instance. Defaults to None.
 
         Returns:
             dict: A dictionary of parsed instances indexed by their ID.
