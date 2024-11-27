@@ -286,9 +286,9 @@ class Cell(object):
 
     def __init__(self, cell_id, material_id, density, surfaces=None, cells=None, importance=None, universe=None, volume=None):
         assert isinstance(cell_id, int), "cell_id must be an int"
-        assert isinstance(material_id, int), "material_id must be an int"
-        assert isinstance(surfaces, list), "surfaces must be a list"
-        assert isinstance(cells, list), "cells must be a list"
+        assert isinstance(material_id, int), "material_id must be an int of material identifier"
+        assert isinstance(surfaces, list), "surfaces must be a list of surface identifiers"
+        assert isinstance(cells, list), "cells must be a list of cell identifiers"
         assert isinstance(importance, dict) or importance is None, "importance must be a dict or None"
         assert isinstance(universe, (int, type(None))), "universe must be an int or None"
         assert isinstance(volume, (float, type(None))), "volume must be a float or None"
