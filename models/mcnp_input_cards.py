@@ -261,7 +261,7 @@ class Material(Printable):
         parameters = match.group(2).split()
         if len(parameters) % 2 != 0:
             error_message = "Uneven amount of material entries"
-            return material_instance, error_message
+            raise SyntaxError(error_message)
         
         for i in range(0, len(parameters), 2):
             # Parameters[i] need to be split using "." to get the zzzaaa before the library
@@ -272,12 +272,12 @@ class Material(Printable):
             try:
                 abundance = float(parameters[i+1])
             except ValueError:
-                error_message = "Abundance ({}) for isotope {} is not valid".format(parameters[i+1], zzzaaa)
-                return material_instance, error_message
+                error_message = "Abundance ({}) for isotope {} is not a valid number".format(parameters[i+1], zzzaaa)
+                raise ValueError(error_message)
                 
             material_instance.add_isotope(Isotope.from_zzzaaa(zzzaaa, abundance, library))
 
-        return material_instance #, error_message
+        return material_instance 
 
 class Cell(object):
     """
