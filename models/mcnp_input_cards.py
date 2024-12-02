@@ -373,18 +373,27 @@ class CellFactory:
     @staticmethod
     def split_line(line):
         """
-        Splits the line before and after the "volimpulatfill" characters. 
-        This way cell definition can be separated from the other keyword based cards within the cell
+        Iteratively removes portions of the input line that start with the keywords 
+        "vol", "imp", "u", "lat", "fill" and returns only the text before encountering these keywords.
+
+        Args:
+            line (str): The input line to process.
+
+        Returns:
+            str: The remaining portion of the line after removing parts with the specified keywords.
         """
-        for i, char in enumerate(line):
-            if char in "volimpulatfill":
-                before_alpha = line[:i].strip()  # Use slicing up to i
-                after_alpha = line[i:].strip()  # Use slicing from i onwards
-                break
-        else:  # Handle the case where no relevant character is found
-            before_alpha = line.strip()
-            after_alpha = ""
-        return before_alpha, after_alpha
+        trimmed_line = line
+        params = ['imp', 'vol', 'pwt', 'ext', 'fcl', 'wwn', 'dxc', 'nonu', 'pd', 'tmp', 'u', 'trcl', 'lat', 'fill', 'elpt', 'cosy', 'bflcl']
+
+        while any(param in trimmed_line for param in params):
+            for param in params:
+                # Find the param in the line
+                param_index = trimmed_line.find(param)
+                if param_index != -1:
+                    # Retain only the part before the param
+                    trimmed_line = trimmed_line[:param_index].strip()
+                    break  # Restart the loop after removing the param
+        return trimmed_line
     @staticmethod
     def _extract_density(line, material_id):
         if material_id != 0:
