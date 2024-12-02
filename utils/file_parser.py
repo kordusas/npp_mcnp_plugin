@@ -150,22 +150,30 @@ class FileParser(object):
         """
         parsed_items = {}
         comment = ""
-        for line in block:
-            if is_match_at_start(line, regex_pattern=regex_pattern):
+        try:
+            for line in block:
+                if is_match_at_start(line, regex_pattern=regex_pattern):
 
-                # returns instance and error message if any during the instance creation
-                instance, error_message = create_instance_func(line, comment)
-                
-                if error_message:
-                    self.error_collection.add_error(ErrorModel(line, error_message,  "INVALID_DATA"))
-                if instance:
-                    self.logger.debug("Created instance: %s", instance)
-                    parsed_items[instance.id] = instance
-                comment = ""
-            elif is_comment_line(line):
-                comment += " " + re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip("||").strip())
-            else:
-                comment = ""
+                    # returns instance and error message if any during the instance creation
+                    instance = create_instance_func(line, comment)
+                    
+                    if instance:
+                        self.logger.debug("Created instance: %s", instance)
+                        parsed_items[instance.id] = instance
+                    comment = ""
+
+                elif is_comment_line(line):
+                    comment += " " + re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip("||").strip())
+                else:
+                    comment = ""
+                    
+        except Exception as e:
+                # Catch any exception, log it, and add it to the error collection
+                error_message = "Error while processing line '{}': {}".format(line, e)
+                self.logger.error(error_message)
+                self.error_collection.add_error(
+                    ErrorModel(line, e, "INVALID_DATA")
+                )
         return parsed_items
 
     def get_transformations(self):

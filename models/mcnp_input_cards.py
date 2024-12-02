@@ -75,7 +75,7 @@ class Tally(Printable):
         tally_particles = match.group(3).split(",") if match.group(3) else None
         tally_entries = match.group(4).split() if match.group(4) else None
         
-        return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment, collision_heating_enabled=collision_heating_enabled), None
+        return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment, collision_heating_enabled=collision_heating_enabled)
 class Transformation(Printable):
     def __init__(self, transformation_id, parameters, comment=None):
         assert isinstance(transformation_id, int), "transformation_id must be an int"
@@ -99,7 +99,7 @@ class Transformation(Printable):
         # if * in line then this is angles and not cosines
         if "*" in line[0:2]:
              comment += " Angles transformation "
-        return cls(id, parameters, comment), None
+        return cls(id, parameters, comment)
     
 # class Surface is a Printable object class that has the following attributes:    
 class Surface(Printable):
@@ -159,7 +159,7 @@ class Surface(Printable):
                 surface_type = surface_data[1]
                 surface_params = ' '.join(surface_data[2:])
 
-        return cls(surface_id, surface_type, surface_params, comment, surface_transform), None
+        return cls(surface_id, surface_type, surface_params, comment, surface_transform)
 
         
 class Isotope(object):
@@ -277,7 +277,7 @@ class Material(Printable):
                 
             material_instance.add_isotope(Isotope.from_zzzaaa(zzzaaa, abundance, library))
 
-        return material_instance, error_message
+        return material_instance #, error_message
 
 class Cell(object):
     """
@@ -336,18 +336,25 @@ class CellFactory:
         Parses an input line and creates a Cell instance.
         """
                             
-        before_alpha, after_alpha = CellFactory.split_line(line)
-        CellFactory.logger.debug("Split line: %s | %s", before_alpha, after_alpha)
+        cell_definition_text = CellFactory.split_line(line)
+        CellFactory.logger.debug("Cell definition: %s ", cell_definition_text)
 
-        
+
+                             
+
         # It extracts the following information:
         #   match.group(1) - cell_id: A unique numerical identifier for the cell.
         #   match.group(2) - mat number: The material number associated with the cell.
         #   match.group(3) - cell definition: A string containing the cell's properties 
         #                      (e.g., density, geometry).
-        match = re.search(r'(\d+)\s+(\d+)\s+(\S+.*)?', before_alpha)
+        match = re.search(r'(\d+)\s+(\d+)\s+(\S+.*)?', cell_definition_text)
 
+        # if cell is like but definition
+        if "like" in cell_definition_text and "but" in cell_definition_text:
+            return  Cell(validate_return_id_as_int( match.group(1), 0))
+                             
         if not match:
+            CellFactory.logger.error("Input line format is invalid: %s", line)
             raise ValueError("Input line format is invalid")
 
         cell_id = validate_return_id_as_int( match.group(1))
@@ -356,16 +363,13 @@ class CellFactory:
         # extracts the density and returns trimmed line containing only the cell definition
         trimmed_line, density = CellFactory._extract_density(match.group(3), material_id)
 
-        surfaces, cells, error_message = CellFactory._parse_surfaces_and_cells(trimmed_line)
+        surfaces, cells = CellFactory._parse_surfaces_and_cells(trimmed_line)
 
-        if after_alpha:
-            universe, volume = CellFactory._parse_universe_and_volume(after_alpha)
-        else:
-            universe, volume = None, None
+        universe, volume = CellFactory._parse_universe_and_volume(line)
 
         # Placeholder for importance dictionary; can be extended as needed
         importance = {}  
-        return Cell(cell_id, material_id, density, surfaces, cells, importance, universe, volume), error_message
+        return Cell(cell_id, material_id, density, surfaces, cells, importance, universe, volume)
 
     @staticmethod
     def _extract_importance(string):
@@ -439,7 +443,9 @@ class CellFactory:
                     cells.append(int(entry.strip("#")))
                 else:
                     surfaces.append(int(entry))
-            return surfaces, cells, None
+            return surfaces, cells
         except ValueError as e:
-            error_message = "Cell entry is not a valid integer: {}".format(e)
-            return surfaces, cells, error_message
+            error_message = "Cell entry is not a valid integer: {}".format(entry)
+            
+            CellFactory.logger.error(error_message)
+            raise ValueError(error_message)
