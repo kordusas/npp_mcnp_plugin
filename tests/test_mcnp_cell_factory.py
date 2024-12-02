@@ -28,7 +28,7 @@ test_data = [
 @pytest.mark.parametrize("line, expected_attributes", test_data)
 def test_cell_creation(line, expected_attributes):
     # Create the cell using the factory
-    cell, error = CellFactory.create_from_input_line(line)
+    cell = CellFactory.create_from_input_line(line)
     
     # Assert each attribute matches expected values
     for attr_name, expected_value in expected_attributes.items():
