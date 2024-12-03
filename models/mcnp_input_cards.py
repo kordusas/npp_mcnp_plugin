@@ -161,43 +161,44 @@ class Surface(Printable):
 
         return cls(surface_id, surface_type, surface_params, comment, surface_transform)
 
-        
 class Isotope(object):
-    # class variable for ease of access to element names
-    # hand checked.
+    # Class variable for element names (shared across all instances)
     element_names = initialise_json_data("element_names.json")
 
-    def __init__(self, zzzaaa, name, z, a, abundance, library=None):
-        self.name = name
-        self.zzzaaa = zzzaaa
-        self.z = z
-        self.a = a
+    def __init__(self, z, a, abundance, library=None, comment=""):
+        self.z = z  # Atomic number
+        self.a = a  # Mass number
         self.abundance = abundance
-        self.comment = ""
-        self.library = library # this is optional library type like .70c .60c etc
+        self.library = library  # Optional library type, e.g., ".70c"
+        self.comment = comment  # Comments specific to the isotope
 
-    @classmethod
-    def from_zzzaaa(cls, zzzaaa, abundance, library=None):
-        z = zzzaaa / 1000
-        a = zzzaaa % 1000
-        name = cls.get_element_name(z)
-        return cls(zzzaaa, name, z, a, abundance, library)
+    @property
+    def zzzaaa(self):
+        """Dynamically derive the zzzaaa code from z and a."""
+        return self.z * 1000 + self.a
+
+    @property
+    def name(self):
+        """Dynamically derive the element name from atomic number."""
+        return self.get_element_name(self.z)
 
     @classmethod
     def get_element_name(cls, z):
-        # Access the class variable for element names
+        """Access the class variable for element names."""
         return cls.element_names.get(str(z), 'Unknown Element')
-    
+
     def add_comment(self, comment):
+        """Add additional information to the isotope comment."""
         self.comment += comment
+
     def __str__(self):
+        """String representation of the isotope."""
         return "{:>4} {:>3} {:>3} {:.3e}".format(self.name, self.z, self.a, self.abundance)
 
 
+
 class Material(Printable):
-    """
-    later need to fix the part where both density and atomic density can be present. this cannot be the case.
-    """    
+    """Class representing a material containing multiple isotopes."""   
 
     def __init__(self, material_id, comment, isotopes=None):
         assert isinstance(material_id, int), "material_id must be an int"
@@ -207,7 +208,9 @@ class Material(Printable):
         self.atomic_density = None
         self.isotopes = isotopes if isotopes is not None else []
        
-        
+    def add_isotope(self, isotope):
+        self.isotopes.append(isotope)
+
     def __str__(self):
         sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
         isotopes_str = '\n'.join([str(iso) for iso in sorted_isotopes])
@@ -222,8 +225,7 @@ class Material(Printable):
         else:
             return "%s %s" % (self.id, self.atomic_density)
         return
-    def add_isotope(self, isotope):
-        self.isotopes.append(isotope)
+
     
     @staticmethod
     def expand_natural_abundance(isotope):
@@ -242,42 +244,52 @@ class Material(Printable):
             expanded_isotopes.extend(self.expand_natural_abundance(isotope))
         self.isotopes = expanded_isotopes
 
+class Material(Printable):
+    """Class representing a material containing multiple isotopes."""
+
+    def __init__(self, material_id, comment, isotopes=None):
+        assert isinstance(material_id, int), "material_id must be an int"
+        self.id = material_id
+        self.comment = comment
+        self.density = None
+        self.atomic_density = None
+        self.isotopes = isotopes if isotopes else []
+
+    def add_isotope(self, isotope):
+        self.isotopes.append(isotope)
+
+    def __str__(self):
+        sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
+        isotopes_str = "\n".join(str(iso) for iso in sorted_isotopes)
+        if len(self.isotopes) > 5:
+            return "Material {}\nTop 5 Isotopes:\nName   Z   A   Abundance\n{}".format(self.id, isotopes_str)
+        return "Material {}\nIsotopes:\nName   Z   A   Abundance\n{}".format(self.id, isotopes_str)
+
     @classmethod
     def create_from_input_line(cls, line, comment=None):
-        """
-        Class method to create a Material instance from an input line.
-        Assumes:
-            the input line contains all of the information about the material.
-            input line is all lower case and no comments are present in the line.
-        """
-        error_message = None
-        # Find the material id using regex and then separate the material
         match = re.search(r'm(\d+)(.*)', line)
         if not match:
             raise ValueError("Invalid material line format")
-        material_id = validate_return_id_as_int(match.group(1))
+        material_id = int(match.group(1))
         material_instance = cls(material_id, comment)
-        # Separate the parameters; they are paired in zzzaaa and abundance, and from that create isotope instances
         parameters = match.group(2).split()
-        if len(parameters) % 2 != 0:
-            error_message = "Uneven amount of material entries"
-            raise SyntaxError(error_message)
-        
-        for i in range(0, len(parameters), 2):
-            # Parameters[i] need to be split using "." to get the zzzaaa before the library
-            zzzaaa_list = parameters[i].split(".")
-            zzzaaa = int(zzzaaa_list[0])
-            library = zzzaaa_list[1] if len(zzzaaa_list) > 1 else None
-            
-            try:
-                abundance = float(parameters[i+1])
-            except ValueError:
-                error_message = "Abundance ({}) for isotope {} is not a valid number".format(parameters[i+1], zzzaaa)
-                raise ValueError(error_message)
-                
-            material_instance.add_isotope(Isotope.from_zzzaaa(zzzaaa, abundance, library))
 
-        return material_instance 
+        if len(parameters) % 2 != 0:
+            raise SyntaxError("Uneven number of material entries")
+
+        # Delegate creation of isotopes to IsotopeFactory
+        factory = IsotopeFactory()
+        for i in range(0, len(parameters), 2):
+            isotope = factory.create_isotope_from_input(parameters[i], parameters[i + 1])
+            material_instance.add_isotope(isotope)
+
+        return material_instance
+    def print_output(self):
+            if self.density is not None:
+                return "%s %s" % (self.id, -self.density)
+            else:
+                return "%s %s" % (self.id, self.atomic_density)
+            return
 
 class Cell(object):
     """
@@ -324,6 +336,45 @@ class Cell(object):
         """Replaces the material ID with a new material."""
         assert isinstance(new_material_id, int), "new_material_id must be an int"
         self.material_id = new_material_id
+
+class IsotopeFactory(object):
+    """Singleton factory class for creating Isotope instances."""
+    _instance = None
+    element_names = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(IsotopeFactory, cls).__new__(cls)
+            cls.element_names = initialise_json_data("element_names.json")
+        return cls._instance
+
+    @classmethod
+    def get_element_name(cls, z):
+        return cls.element_names.get(str(z), 'Unknown Element')
+
+    def create_isotope(self, zzzaaa, abundance, library=None):
+        z = zzzaaa // 1000
+        a = zzzaaa % 1000
+        name = self.get_element_name(z)
+        return Isotope(z, a, abundance, library)
+
+    def create_isotope_from_input(self, zzzaaa_library, abundance_str):
+        """
+        Parse an input string to extract zzzaaa, library, and abundance.
+        """
+        # Split the string into parts; provide a default empty string for the library
+        parts = zzzaaa_library.split(".")
+        zzzaaa = validate_return_id_as_int(parts[0])  # Convert zzzaaa to integer
+        library = parts[1] if len(parts) > 1 else None
+
+        # Convert abundance to float
+        try:
+            abundance = float(abundance_str)
+        except ValueError:
+            raise ValueError("Abundance ({}) is not a valid number".format(abundance_str))
+
+        # Delegate creation of the isotope
+        return self.create_isotope(zzzaaa, abundance, library)
 
 class CellFactory:
     """
