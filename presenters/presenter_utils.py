@@ -127,7 +127,16 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function checks if the cell id is selected in the cell definition.
         """
-        pass
+        if not self.is_cell_definition_selected():
+            return False
+        selection = self.model_of_selected_line.selected_text
+        indx_of_previous_char = self.model_of_selected_line.selection_start - 1
+        previous_char = self.model_of_selected_line.current_line[indx_of_previous_char]
+        self.logger.debug("character before selection {}".format(previous_char))
+        if  previous_char == "#":
+            return True 
+
+        return False
     def _get_all_surface_id_from_selection(self):
             """
             parse the selected line and return all surface ids in the selection
@@ -139,6 +148,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             if selected_surfaces:
                 selected_surfaces = sorted(set(selected_surfaces))
                 return selected_surfaces
+            self.logger.debug("No surface is selected")
             return None   
     
     def should_ignore_selection(self):
@@ -212,6 +222,10 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
             return self._handle_surfaces_selected()
         elif self.is_material_id_selected():
             return self._handle_material_id_selected()
+        
+        elif self.is_cell_id_in_cell_definition_selected():
+            self.logger.debug("cell_id_in_cell_definition_selected")
+            
         elif self.is_cell_definition_selected():
             return self._handle_surfaces_selected()
         # order of cases matters, as this only checks if selection matches the first entry in the line
