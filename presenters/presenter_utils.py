@@ -211,7 +211,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         """
         This function analyses the cell.
         """
-        self.logger.debug("\nCalled method analyze_selection\n")
+        self.logger.debug("Called method analyze_selection\n")
         result = {}
         if self.should_ignore_selection():
             return None
@@ -231,7 +231,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         # order of cases matters, as this only checks if selection matches the first entry in the line
         elif self.is_cell_id_selected():
             return self._handle_cell_id_selected()        
-
+        
         return None
 
 
