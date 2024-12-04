@@ -18,6 +18,7 @@ CHAR_SPACE = " "
 from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory
 from npp_mcnp_plugin.presenters.autocomplete_presenter import BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
+from npp_mcnp_plugin.utils.string_utils import get_block_type_from_line
 
 class EditorHandler:
     def __init__(self, selection_notifier, error_notifier, autocomplete_notifier):
@@ -82,7 +83,7 @@ class EditorHandler:
             return
         
         # getting the block type according to which we can select presenter
-        block_type = self.mcnp_input.return_block_type(model_of_current_line.current_line_no)
+        block_type = get_block_type_from_line(model_of_current_line)
         self.logger.info("Block type is: %s", block_type)
         # block presenter can analysie the 
         block_presenter = BlockPreseterFactory(block_type, model_of_current_line= model_of_current_line, mcnp_input=self.mcnp_input, notifier=self.selection_notifier)
@@ -100,7 +101,7 @@ class EditorHandler:
 
         self.logger.info("char added in non comment line")
 
-        block_type = self.mcnp_input.return_block_type(model_of_current_line.current_line_no)
+        block_type = block_type = get_block_type_from_line(model_of_current_line)
         self.logger.info("Block type is: %s", block_type)
 
         # *** Create and use the Autocomplete Presenter ***
