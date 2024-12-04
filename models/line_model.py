@@ -1,13 +1,14 @@
 
 from Npp import editor
 import logging, re
+from npp_mcnp_plugin.utils.string_utils import is_comment_line
 
 class ModelOfLine(object):
     """
     This class is used to interact with the current line of the text editor. creates model representation of the line.
     """
-    def __init__(self, current_line=None, selected_text=None, cursor_column=None, current_line_no=None, selection_start=None, selection_end=None):
-        self.current_line = current_line
+    def __init__(self, selected_text=None, cursor_column=None, current_line_no=None, selection_start=None, selection_end=None):
+        
         self.selected_text = selected_text
         self.cursor_column = cursor_column
         self.current_line_no = current_line_no
@@ -23,13 +24,18 @@ class ModelOfLine(object):
         selection_end = editor.getColumn(editor.getSelectionEnd())
         cursor_column = editor.getColumn(editor.getCurrentPos())
         current_line_no = editor.lineFromPosition(editor.getCurrentPos())
-        instance = cls(None, selected_text, cursor_column, current_line_no,selection_start,selection_end)
+        instance = cls( selected_text, cursor_column, current_line_no,selection_start,selection_end)
 
-        instance.current_line = instance._get_line_without_comment(current_line_no)
+
 
         return instance
 
-
+    @property
+    def current_line(self):
+        """
+        Returns the current line of the text editor.
+        """
+        return self._get_line_without_comment(self.current_line_no).lstrip()
     def is_pattern_before_cursor(self, pattern):
         return pattern in self.text_till_cursor
         
@@ -121,8 +127,7 @@ class ModelOfLine(object):
             if self.cursor_column > fill_index:
                 return True
         # checking if there is keyword fill earlier
-        full_line = self.get_full_mcnp_input_line()
-        if "fill" in full_line:
+        if "fill" in self.full_mcnp_input_line:
                 return True
 
         return False
@@ -137,31 +142,50 @@ class ModelOfLine(object):
         if "$" in current_line:
             current_line = current_line.split("$", 1)[0]
         return current_line.rstrip()
-
-    def get_full_mcnp_input_line(self):
+    @property
+    def full_mcnp_input_line(self):
         if not self.is_continuation_line:
-            return self.selected_text
+            return self.current_line
         return self._merge_continuation_lines()
 
     def _merge_continuation_lines(self):
-        full_line_parts = [self.selected_text]
-        line_offset = 1
-        while True:
+        """
+        Merges continuation lines into a single line by iterating through
+        previous lines that are marked as continuation lines.
+
+        This function collects parts of the current and previous lines that
+        are considered continuation lines, strips leading spaces, and combines
+        them into a single string.
+
+        Returns:
+            str: A single string representing the merged continuation lines,
+            with leading spaces removed and the continuation character '&'
+            stripped from the end.
+        """
+        full_line_parts = []
+        line_number = self.current_line_no
+
+        # Start with the current line, cleaned of comments and leading spaces
+        previous_line = self._get_line_without_comment(line_number).lstrip()
+
+        # Continue processing as long as the line is a continuation line or a comment line
+        while self.is_continuation_line(line_number) or is_comment_line(previous_line):
+            # Add the previous line if it's not a comment
+            if not is_comment_line(previous_line):
+                full_line_parts.append(previous_line)
+
+            # Move to the previous line
             try:
-                previous_line = self._get_previous_line(line_offset).lstrip()
+                line_number -= 1
+                previous_line = self._get_line_without_comment(line_number).lstrip()
             except IndexError:
                 break
 
-            if not self.is_continuation_line(self.current_line_no-line_offset):
-                break
+        # Join all parts and strip any '&' at the end
+        return ' '.join(reversed(full_line_parts)).strip("&")
 
-            full_line_parts.insert(0, previous_line)
-            line_offset += 1
 
-        return ' '.join(full_line_parts).strip("&")
 
-    def _get_previous_line(self, line_offset):
-        return self._get_line_without_comment(self.current_line_no - line_offset)
 
     def find_space_separated_token_end_positions(self, token_index, pattern=r'\S+'):
         """
