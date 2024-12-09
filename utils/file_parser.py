@@ -1,7 +1,5 @@
-from Npp import editor, console
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material, CellFactory
 from npp_mcnp_plugin.models.error import  ErrorModel
-from npp_mcnp_plugin.utils.input_validator import InputValidator
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_match_at_start
 
 import re
@@ -61,7 +59,7 @@ class FileParser(object):
     def parse_blocks(self):
         for key in ['cells','surfaces', 'physics']:
             self.block[key] =self.format_blocks(self.lines[self.block_locations[key]['start']:self.block_locations[key]['end']])
-
+  
 
     def parse(self):
         """
@@ -90,7 +88,7 @@ class FileParser(object):
         merged_block = []
         comment = ""
         for  line in block:
-            # strip the continuation sign which may be present in some cases but not all
+            
             line = line.rstrip('\n')
             if line.strip() == "":
                 continue
@@ -107,6 +105,8 @@ class FileParser(object):
                 comment = ""
             elif line.startswith("    ") or merged_block[-1].endswith('&'):
                 merged_block[-1] = merged_block[-1].rstrip('&') + line
+            elif line.startswith("c"):
+                comment += " " + line[1:]
             else:
                 self._add_new_line(merged_block, line, comment)
                 comment = ""
@@ -134,7 +134,7 @@ class FileParser(object):
     def _add_new_line(self, merged_block, line, comment):
         merged_block.append(line)
         if comment:
-            merged_block.insert(-2, "c " + comment.strip() + "\n")    
+            merged_block.insert(-2, "c " + comment.replace("--", "").replace("==", "").replace("||", "").strip())    
 
     def _parse_block(self, block, regex_pattern, create_instance_func):
         """
@@ -163,7 +163,7 @@ class FileParser(object):
                     comment = ""
 
                 elif is_comment_line(line):
-                    comment += " " + re.sub(' +', ' ', line.lstrip("c").strip("--").strip("==").strip("||").strip())
+                    comment += " " + re.sub(' +', ' ', line.lstrip("c"))
                 else:
                     comment = ""
                     
