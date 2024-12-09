@@ -15,6 +15,51 @@ import logging
 
 CHAR_PERIOD = "."
 CHAR_SPACE = " "
+FILE_TYPES_TO_IGNORE = [
+    # Documentation and text files
+    ".txt",    # Plain text files
+    ".doc",    # Microsoft Word files
+    ".docx",   # Microsoft Word (modern)
+    ".pdf",    # PDF files
+    ".md",     # Markdown files
+    ".rst",    # reStructuredText files
+
+    # Data and log files
+    ".csv",    # Comma-separated values
+    ".tsv",    # Tab-separated values
+    ".dat",    # Generic data files
+    ".json",   # JSON files
+    ".xml",    # XML files
+    ".yaml",   # YAML files
+    ".yml",    # YAML (alternate extension)
+    ".log",    # Log files
+    ".out",    # Output files
+    ".tmp",    # Temporary files
+
+    # Source code and scripts (non-MCNP relevant)
+    ".py",     # Python files
+    ".java",   # Java files
+    ".js",     # JavaScript files
+    ".c",      # C language files
+    ".cpp",    # C++ files
+    ".cc",     # Alternate C++ files
+    ".h",      # C/C++ header files
+    ".hpp",    # C++ header files
+    ".f",      # Fortran files (fixed form)
+    ".f90",    # Fortran files (free form)
+    ".f95",    # Fortran 95 files
+    ".for",    # Fortran alternate extension
+    ".csh",    # C-shell scripts
+    ".sh",     # Shell scripts
+
+    # Compressed and backup files
+    ".bak",    # Backup files
+    ".swp",    # Swap files
+    ".zip",    # Compressed archive
+    ".tar",    # Tarball archive
+    ".gz"      # Gzipped files
+]
+
 from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory
 from npp_mcnp_plugin.presenters.autocomplete_presenter import BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
@@ -48,7 +93,15 @@ class EditorHandler:
         self.logger.info("Initialising parser and Mcnp input")
         
         # Parse the file
-        self.parsed_file = FileParser.from_file(notepad.getCurrentFilename(), mcnp_error_collection)
+
+        current_filename = notepad.getCurrentFilename()
+
+        # Ignore certain file types, such as text, output, csv, or python files and stop parsing in that case
+        if any(current_filename.lower().endswith(filetype.lower()) for filetype in FILE_TYPES_TO_IGNORE):
+            self.logger.info("Ignoring file: {}".format(current_filename))
+            return
+
+        self.parsed_file = FileParser.from_file(current_filename, mcnp_error_collection)
         self.mcnp_input = ModelMcnpInput.from_file_parser(self.parsed_file)
 
         
