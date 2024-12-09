@@ -125,21 +125,6 @@ class ModelMcnpInput(object):
         """
         return self.transformations.get(transformation_id, "Transformation {}: The Machine god doesn't recognize this transformation".format(transformation_id))
     
-    def return_block_type(self, line_number):
-        """
-        This function returns the type of block the line is in.
-
-        Args:
-            line_number (int): The line number to check.
-
-        Returns:
-            str: The type of block ('surface', 'cell', 'physics') or None if not in any block.
-        """
-        for block_type in ['surfaces', 'cells', 'physics']: 
-            if self.block_locations[block_type]['start'] <= line_number <= self.block_locations[block_type]['end']:
-                
-                return block_type
-        return None
 
 
 class HandlerMcnpInput(object):
