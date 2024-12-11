@@ -1,6 +1,8 @@
 import re
 import logging
-def get_block_type_from_line(model_of_line):
+
+
+def get_block_type_from_line(logger, full_mcnp_input_line):
     """
     Determine the block type of the given line based on regex patterns.
 
@@ -10,9 +12,7 @@ def get_block_type_from_line(model_of_line):
     Returns:
         str: The block type, one of ['surfaces', 'cells', 'physics'].
     """
-    # Fetch the full line for evaluation
-    full_mcnp_input_line = model_of_line.full_mcnp_input_line.strip()
-    logging.debug("full line: %s", full_mcnp_input_line)
+    logger.debug("full line: %s", full_mcnp_input_line)
     # Define regex patterns for each block type
     patterns = {
         'surfaces': [
@@ -20,9 +20,13 @@ def get_block_type_from_line(model_of_line):
             r'^\d+\s+(?!like\b)[a-zA-Z]+\s+\d+',         # Second 'surfaces' pattern
         ],
         'cells': [
-            r'^\d+\s+\d+\s+\S+\s+.*',           # 'cells' pattern
-            r'^\d+\s+like\s+\d+but\s+.*',
-        ]
+            r'^\d+\s+\d+\s+[-]?\d[\S+]?.*\s+\S+',           # 'cells' pattern
+            r'^\d+\s+like\s+\d+\s+but',                     
+        ],
+        "physics": [
+            r'^kcode\s+.*',
+            r'^mode\s+.*',
+        ],
     }
     
     # Check the line against each pattern in order
@@ -31,8 +35,8 @@ def get_block_type_from_line(model_of_line):
             if re.match(pattern, full_mcnp_input_line):
                 return block_type
     
-    # If no patterns match, default to 'physics'
-    return 'physics'
+    # If no patterns match, default to 'undefined'
+    return None
 
 def is_comment_line(line):
     """

@@ -136,8 +136,11 @@ class EditorHandler:
             return
         
         # getting the block type according to which we can select presenter
-        block_type = get_block_type_from_line(model_of_current_line)
+        block_type = get_block_type_from_line(self.logger, model_of_current_line.full_mcnp_input_line.strip())
         self.logger.info("Block type is: %s", block_type)
+        if not block_type:
+             return 
+        
         # block presenter can analysie the 
         block_presenter = BlockPreseterFactory(block_type, model_of_current_line= model_of_current_line, mcnp_input=self.mcnp_input, notifier=self.selection_notifier)
         block_presenter.notify_selection()
@@ -154,8 +157,12 @@ class EditorHandler:
 
         self.logger.info("char added in non comment line")
 
-        block_type = block_type = get_block_type_from_line(model_of_current_line)
+        block_type = block_type = get_block_type_from_line(self.logger, model_of_current_line.full_mcnp_input_line.strip())
         self.logger.info("Block type is: %s", block_type)
+        if not block_type:
+            return 
+                
+        
 
         # *** Create and use the Autocomplete Presenter ***
         autocomplete_presenter = BlockAutoCompletePresenterFactory(
