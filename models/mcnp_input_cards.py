@@ -1,20 +1,19 @@
 from abc import ABCMeta, abstractmethod
+import re
+
 try: 
     from npp_mcnp_plugin.utils.general_utils import validate_return_id_as_int, initialise_json_data
-    from npp_mcnp_plugin.utils.string_utils import extract_keyword_value
 except ImportError:
     from utils.general_utils import validate_return_id_as_int, initialise_json_data
-    from utils.string_utils import extract_keyword_value
-import re
-import logging
+
+
 natural_abundances = initialise_json_data("natural_abundances.json")
 class Printable(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def print_output(self):
-        pass
-    
+        pass   
 
 class Tally(Printable):
     def __init__(self, tally_id, particles=None, entries=None, energies=None, comment=None, collision_heating_enabled=False):
@@ -195,54 +194,44 @@ class Isotope(object):
         """String representation of the isotope."""
         return "{:>4} {:>3} {:>3} {:.3e}".format(self.name, self.z, self.a, self.abundance)
 
+class IsotopeFactory(object):
+    """Singleton factory class for creating Isotope instances."""
+    _instance = None
+    element_names = None
 
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(IsotopeFactory, cls).__new__(cls)
+            cls.element_names = initialise_json_data("element_names.json")
+        return cls._instance
 
-class Material(Printable):
-    """Class representing a material containing multiple isotopes."""   
+    @classmethod
+    def get_element_name(cls, z):
+        return cls.element_names.get(str(z), 'Unknown Element')
 
-    def __init__(self, material_id, comment, isotopes=None):
-        assert isinstance(material_id, int), "material_id must be an int"
-        self.id = material_id
-        self.comment = comment
-        self.density = None
-        self.atomic_density = None
-        self.isotopes = isotopes if isotopes is not None else []
-       
-    def add_isotope(self, isotope):
-        self.isotopes.append(isotope)
+    def create_isotope(self, zzzaaa, abundance, library=None):
+        z = zzzaaa // 1000
+        a = zzzaaa % 1000
+        name = self.get_element_name(z)
+        return Isotope(z, a, abundance, library)
 
-    def __str__(self):
-        sorted_isotopes = sorted(self.isotopes, key=lambda x: abs(x.abundance), reverse=True)[:5]
-        isotopes_str = '\n'.join([str(iso) for iso in sorted_isotopes])
-        # if we have more than 5 isotopes show only top 5 
-        if len(self.isotopes) > 5:
-            return "Material {}\nTop 5 Isotopes:\nName   Z   A   Abundance\n{}".format(self.id, isotopes_str)
-        return "Material {}\nIsotopes:\nName   Z   A Abundance\n{}".format(self.id, isotopes_str)
-    
-    def print_output(self):
-        if self.density is not None:
-            return "%s %s" % (self.id, -self.density)
-        else:
-            return "%s %s" % (self.id, self.atomic_density)
-        return
+    def create_isotope_from_input(self, zzzaaa_library, abundance_str):
+        """
+        Parse an input string to extract zzzaaa, library, and abundance.
+        """
+        # Split the string into parts; provide a default empty string for the library
+        parts = zzzaaa_library.split(".")
+        zzzaaa = validate_return_id_as_int(parts[0])  # Convert zzzaaa to integer
+        library = parts[1] if len(parts) > 1 else None
 
-    
-    @staticmethod
-    def expand_natural_abundance(isotope):
-        
-            
-        if isotope.a == 0:
-            return [
-                Isotope.from_zzzaaa(zzzaaa, abundance)
-                for zzzaaa, abundance in natural_abundances.get(isotope.z, [])
-            ]
-        return [isotope]
+        # Convert abundance to float
+        try:
+            abundance = float(abundance_str)
+        except ValueError:
+            raise ValueError("Abundance ({}) is not a valid number".format(abundance_str))
 
-    def expand_isotopes(self):
-        expanded_isotopes = []
-        for isotope in self.isotopes:
-            expanded_isotopes.extend(self.expand_natural_abundance(isotope))
-        self.isotopes = expanded_isotopes
+        # Delegate creation of the isotope
+        return self.create_isotope(zzzaaa, abundance, library)
 
 class Material(Printable):
     """Class representing a material containing multiple isotopes."""
@@ -336,167 +325,3 @@ class Cell(object):
         """Replaces the material ID with a new material."""
         assert isinstance(new_material_id, int), "new_material_id must be an int"
         self.material_id = new_material_id
-
-class IsotopeFactory(object):
-    """Singleton factory class for creating Isotope instances."""
-    _instance = None
-    element_names = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(IsotopeFactory, cls).__new__(cls)
-            cls.element_names = initialise_json_data("element_names.json")
-        return cls._instance
-
-    @classmethod
-    def get_element_name(cls, z):
-        return cls.element_names.get(str(z), 'Unknown Element')
-
-    def create_isotope(self, zzzaaa, abundance, library=None):
-        z = zzzaaa // 1000
-        a = zzzaaa % 1000
-        name = self.get_element_name(z)
-        return Isotope(z, a, abundance, library)
-
-    def create_isotope_from_input(self, zzzaaa_library, abundance_str):
-        """
-        Parse an input string to extract zzzaaa, library, and abundance.
-        """
-        # Split the string into parts; provide a default empty string for the library
-        parts = zzzaaa_library.split(".")
-        zzzaaa = validate_return_id_as_int(parts[0])  # Convert zzzaaa to integer
-        library = parts[1] if len(parts) > 1 else None
-
-        # Convert abundance to float
-        try:
-            abundance = float(abundance_str)
-        except ValueError:
-            raise ValueError("Abundance ({}) is not a valid number".format(abundance_str))
-
-        # Delegate creation of the isotope
-        return self.create_isotope(zzzaaa, abundance, library)
-
-class CellFactory:
-    """
-    Factory for creating and parsing Cell instances.
-    """
-    logger = logging.getLogger(__name__)
-    @staticmethod
-    def create_from_input_line(line, comment=None):
-        """
-        Parses an input line and creates a Cell instance.
-        """
-                            
-        cell_definition_text = CellFactory.split_line(line)
-        CellFactory.logger.debug("Cell definition: %s ", cell_definition_text)
-
-
-                             
-
-        # It extracts the following information:
-        #   match.group(1) - cell_id: A unique numerical identifier for the cell.
-        #   match.group(2) - mat number: The material number associated with the cell.
-        #   match.group(3) - cell definition: A string containing the cell's properties 
-        #                      (e.g., density, geometry).
-        match = re.search(r'(\d+)\s+(\d+)\s+(\S+.*)?', cell_definition_text)
-
-        # if cell is like but definition
-        if "like" in cell_definition_text and "but" in cell_definition_text:
-            return  Cell(validate_return_id_as_int( match.group(1), 0))
-                             
-        if not match:
-            CellFactory.logger.error("Input line format is invalid: %s", line)
-            raise ValueError("Input line format is invalid")
-
-        cell_id = validate_return_id_as_int( match.group(1))
-        material_id = validate_return_id_as_int(match.group(2))
-        
-        # extracts the density and returns trimmed line containing only the cell definition
-        trimmed_line, density = CellFactory._extract_density(match.group(3), material_id)
-
-        surfaces, cells = CellFactory._parse_surfaces_and_cells(trimmed_line)
-
-        universe, volume = CellFactory._parse_universe_and_volume(line)
-
-        # Placeholder for importance dictionary; can be extended as needed
-        importance = {}  
-        return Cell(cell_id, material_id, density, surfaces, cells, importance, universe, volume)
-
-    @staticmethod
-    def _extract_importance(string):
-        return None
-    @staticmethod
-    def split_line(line):
-        """
-        Iteratively removes portions of the input line that start with the keywords 
-        "vol", "imp", "u", "lat", "fill" and returns only the text before encountering these keywords.
-
-        Args:
-            line (str): The input line to process.
-
-        Returns:
-            str: The remaining portion of the line after removing parts with the specified keywords.
-        """
-        trimmed_line = line
-        params = ['imp', 'vol', 'pwt', 'ext', 'fcl', 'wwn', 'dxc', 'nonu', 'pd', 'tmp', 'u', 'trcl', 'lat', 'fill', 'elpt', 'cosy', 'bflcl']
-
-        while any(param in trimmed_line for param in params):
-            for param in params:
-                # Find the param in the line
-                param_index = trimmed_line.find(param)
-                if param_index != -1:
-                    # Retain only the part before the param
-                    trimmed_line = trimmed_line[:param_index].strip()
-                    break  # Restart the loop after removing the param
-        return trimmed_line
-    @staticmethod
-    def _extract_density(line, material_id):
-        if material_id != 0:
-            parts = line.split()
-            density = float(parts[0])
-            trimmed_line = " ".join(parts[1:])
-            return trimmed_line, density
-        
-        return line, 0
-
-    @staticmethod
-    def _parse_universe_and_volume(line):
-        """Extracts the universe and volume values if present."""
-        universe = extract_keyword_value(line, 'u')
-        universe = validate_return_id_as_int(universe) if universe else None
-
-        volume = extract_keyword_value(line, 'vol')
-        volume = float(volume) if volume else None
-
-        return universe, volume
-
-    @staticmethod
-    def _parse_surfaces_and_cells(trimmed_line):
-        """
-        Parses surfaces and cell exclusions from the trimmed line.
-
-        Args:
-            trimmed_line: The input line containing surface and cell information.
-
-        Returns:
-            A tuple containing:
-              - A list of surfaces.
-              - A list of cell exclusions.
-              - An error message if an error occurred during parsing, otherwise None.
-        """
-        surfaces = []
-        cells = []
-        try:
-            all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
-            for entry in all_entries:
-                entry = entry.lstrip("0")  # Remove leading zeros
-                if "#" in entry:
-                    cells.append(int(entry.strip("#")))
-                else:
-                    surfaces.append(int(entry))
-            return surfaces, cells
-        except ValueError as e:
-            error_message = "Cell entry is not a valid integer: {}".format(entry)
-            
-            CellFactory.logger.error(error_message)
-            raise ValueError(error_message)
