@@ -60,8 +60,7 @@ FILE_TYPES_TO_IGNORE = [
     ".gz"      # Gzipped files
 ]
 
-from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory
-from npp_mcnp_plugin.presenters.autocomplete_presenter import BlockAutoCompletePresenterFactory
+from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory, BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
 from npp_mcnp_plugin.utils.string_utils import get_block_type_from_line
 
@@ -136,7 +135,7 @@ class EditorHandler:
             return
         
         # getting the block type according to which we can select presenter
-        block_type = get_block_type_from_line(self.logger, model_of_current_line.full_mcnp_input_line.strip())
+        block_type = get_block_type_from_line(self.logger, model_of_current_line.full_entry.strip())
         self.logger.info("Block type is: %s", block_type)
         if not block_type:
              return 
@@ -151,12 +150,12 @@ class EditorHandler:
                 
             if (char_added.isdigit() or char_added == "#") and not is_comment_line(model_of_current_line.current_line):
                 self.logger.info("None space character added ")
-                self.handle_character(char_added, model_of_current_line)
-    def handle_character(self, char_added, model_of_current_line): 
+                self.handle_character(model_of_current_line)
+    def handle_character(self, model_of_current_line): 
  
         self.logger.info("char added in non comment line")
 
-        block_type = block_type = get_block_type_from_line(self.logger, model_of_current_line.full_mcnp_input_line.strip())
+        block_type = block_type = get_block_type_from_line(self.logger, model_of_current_line.full_entry.strip())
         self.logger.info("Block type is: %s", block_type)
         if not block_type:
             return 
