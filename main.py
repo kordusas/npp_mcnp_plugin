@@ -1,5 +1,6 @@
 from Npp import notepad, editor, console, SCINTILLANOTIFICATION, UPDATE, NOTIFICATION
-import time, sys
+import logging
+
 from npp_mcnp_plugin.utils.file_parser import FileParser
 from npp_mcnp_plugin.views.autocoplete_view import  AutocompleteNotification
 from npp_mcnp_plugin.views.selection_view import  SelectionNotification
@@ -11,8 +12,10 @@ from npp_mcnp_plugin.models.mcnp_input  import ModelMcnpInput
 from npp_mcnp_plugin.utils.general_utils import configure_logging, get_char_from_args
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_string_empty
 from npp_mcnp_plugin.utils.input_validator import InputValidator
-import logging
 
+from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory, BlockAutoCompletePresenterFactory
+from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
+from npp_mcnp_plugin.utils.string_utils import get_block_type_from_line
 CHAR_PERIOD = "."
 CHAR_SPACE = " "
 FILE_TYPES_TO_IGNORE = [
@@ -60,9 +63,7 @@ FILE_TYPES_TO_IGNORE = [
     ".gz"      # Gzipped files
 ]
 
-from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory, BlockAutoCompletePresenterFactory
-from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
-from npp_mcnp_plugin.utils.string_utils import get_block_type_from_line
+
 
 class EditorHandler:
     def __init__(self, selection_notifier, error_notifier, autocomplete_notifier):
@@ -141,7 +142,7 @@ class EditorHandler:
              return 
         
         # block presenter can analysie the 
-        block_presenter = BlockPreseterFactory(block_type, model_of_current_line= model_of_current_line, mcnp_input=self.mcnp_input, notifier=self.selection_notifier)
+        block_presenter = BlockPreseterFactory(block_type, model_of_mcnp_card= model_of_current_line, mcnp_input=self.mcnp_input, notifier=self.selection_notifier)
         block_presenter.notify_selection()
         
     def on_character_added(self, args):
@@ -165,7 +166,7 @@ class EditorHandler:
         # *** Create and use the Autocomplete Presenter ***
         autocomplete_presenter = BlockAutoCompletePresenterFactory(
             block_type, 
-            model_of_current_line=model_of_current_line, 
+            model_of_mcnp_card=model_of_current_line, 
             mcnp_input=self.mcnp_input, 
             notifier=self.autocomplete_notifier
         )
