@@ -1,9 +1,12 @@
-from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material, CellFactory
+import re
+import logging
+
+
+from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Tally, Transformation, Material
+from npp_mcnp_plugin.models.mcnp_cell_factory import CellFactory
 from npp_mcnp_plugin.models.error import  ErrorModel
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_match_at_start
 
-import re
-import logging
 
 class FileParser(object):
     def __init__(self, filename, error_collection):
