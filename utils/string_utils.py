@@ -95,7 +95,10 @@ def remove_comments(line):
         :return: The line with comments removed.
         """
         if line is None:
-            return None
+            return None, None
+        elif "$" not in line:
+            return line, ""
+        
         line, comment = line.split("$", 1)
         return line.rstrip(), comment
 
