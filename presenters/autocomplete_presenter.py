@@ -1,27 +1,10 @@
 
 from abc import ABCMeta, abstractmethod
 from npp_mcnp_plugin.utils.string_utils import return_list_entries_starting_with_string
-from npp_mcnp_plugin.utils.general_utils import format_notifier_message, validate_return_id_as_int
-from presenter_utils import is_column_at_cell_definition
+from npp_mcnp_plugin.utils.general_utils import format_notifier_message
+
 import logging
 import re
-from Npp import editor
-
-
-def BlockAutoCompletePresenterFactory(block_type,  model_of_current_line, mcnp_input, notifier):
-    """
-    This function is used to create block presenters. Depending on the block type, it creates the appropriate presenter.
-    """
-    
-    if block_type == "surfaces":
-        return SurfaceBlockAutoCompletePresenter(model_of_current_line, mcnp_input, notifier)
-    elif block_type == "cells":
-        return CellBlockAutoCompletePresenter(model_of_current_line, mcnp_input, notifier)
-    elif block_type == "physics":
-        return PhysicsBlockAutoCompletePresenter(model_of_current_line, mcnp_input, notifier)  
-    else:
-        logging.error("Unknown block type: %s", block_type)
-        return None
     
 class AbstractBlockAutoCompletePresenter(object):
     __metaclass__ = ABCMeta
@@ -52,9 +35,6 @@ class AbstractBlockAutoCompletePresenter(object):
         Generate and provide autocomplete suggestions.
         """
         # for not return empty dictionary
-        
-        
-
 
 class SurfaceBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
     def __init__(self, model_of_current_line, mcnp_input, notifier):
