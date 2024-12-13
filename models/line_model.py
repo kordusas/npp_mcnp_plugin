@@ -1,7 +1,7 @@
 
 from Npp import editor
 import logging, re
-from npp_mcnp_plugin.utils.string_utils import is_comment_line
+from npp_mcnp_plugin.utils.string_utils import is_comment_line, remove_comments, return_last_number_in_string
 
 class ModelOfLine(object):
     """
@@ -28,12 +28,32 @@ class ModelOfLine(object):
 
         return instance
 
+    def get_line(self, line_no):
+        """
+        Fetches a specific line from the editor by line number.
+
+        If an exception occurs, logs the error, continues execution, 
+        and returns a line containing "0".
+        """
+        try:
+            current_line = editor.getLine(line_no).lower()
+        except Exception as e:
+            self.logger.exception(
+                "Error fetching line {}: {}. Returning default line '0'.".format(line_no, str(e))
+            )
+            return "0"
+        
+        line, comment = remove_comments(current_line)
+        return line
+    
     @property
     def current_line(self):
         """
-        Returns the current line of the text editor.
+        Returns the current line from the editor.
         """
-        return self._get_line_without_comment(self.current_line_no).lstrip()
+        line, comment = remove_comments(self.get_line(self.current_line_no))
+        return line
+    
     def is_pattern_before_cursor(self, pattern):
         return pattern in self.text_till_cursor
         
@@ -68,6 +88,89 @@ class ModelOfLine(object):
         Checks if there are non-digit characters before the cursor in the current line.
         """
         return any(char.isalpha() for char in self.text_till_cursor)
+
+    @property
+    def last_number_in_line(self):
+        return return_last_number_in_string(self.current_line)
+    @property
+    def last_number_before_cursor(self):
+        return return_last_number_in_string(self.text_till_cursor)
+    
+    @property
+    def last_entry_before_cursor(self):
+        try:
+            last_entry = self.text_till_cursor.split()[-1]
+            return last_entry
+        except IndexError:
+            return None  # Or any default value or action       
+   
+    def find_space_separated_token_end_position(self, token_index, pattern=r'\S+'):
+        """
+        Finds the position immediately after the first character of a specified space-separated token in a string.
+
+        This method identifies positions in the string where a space separates characters based on the provided pattern.
+
+        Parameters:
+        - token_index (int): The index of the token for which to find the end position, where indexing starts at 0.
+        - pattern (str): The regular expression pattern to identify tokens. Default is r'\S+'. we locate space separated tokens and find where it ends in the line
+
+        Returns:
+        - int: The position immediately after the first character of the specified space-separated token.
+        """
+        matches = list(re.finditer(pattern, self.current_line))
+        if token_index < len(matches):
+            match = matches[token_index]
+            return match.end()
+        return None
+
+class BaseLineHelper(object):
+    """
+    Abstract base class for line helpers in Python 2.7.
+    Provides common methods for analyzing lines and handling continuation logic.
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, model_of_line):
+        """
+        Initializes the helper with a ModelOfLine instance.
+
+        :param model_of_line: An instance of ModelOfLine representing the current line.
+        """
+        self.model_of_line = model_of_line
+
+    def is_continuation_line(self, line_no):
+        """
+        Determines if a specific line is a continuation line.
+
+        :param line_no: The line number to check.
+        :return: True if the line is a continuation line, False otherwise.
+        """
+        current_line, _ = remove_comments(self.model_of_line.get_line(line_no))
+        if current_line and current_line.startswith("    "):
+            return True
+
+        previous_line = remove_comments(self.model_of_line.get_line(line_no - 1))
+        return bool(previous_line and previous_line.endswith("&"))
+
+    def is_current_line_continuation_line(self):
+        """
+        Determines if the current line is a continuation line.
+
+        :return: True if the current line is a continuation line, False otherwise.
+        """
+        return self.is_continuation_line(self.model_of_line.current_line_no)
+    @property
+    def is_cursor_at_material(self):
+        """
+        Determine if the cursor is at a material definition 
+        only usable within a cell block.
+
+        Returns:
+            bool: True if the cursor is at a material definition, False otherwise.
+        """
+        # strip line into list, if there is only two elements in the list then it is likely we are adding a material
+        return len(self.text_till_cursor_list) == 2 
+
     @property
     def is_current_line_continuation_line(self):
         return self.is_continuation_line(self.current_line_no)
@@ -87,49 +190,6 @@ class ModelOfLine(object):
        
         previous_line = self._get_line_without_comment(line_number - 1)
         return previous_line.endswith('&')
-    
-
-    # Helper method for regular expressions (example)
-    def _find_last_number_in_string(self, string):
-        try:
-            return re.findall(r'\d+', string)[-1]
-        except IndexError:
-            return None
-
-    @property
-    def last_number_in_line(self):
-        return self._find_last_number_in_string(self.current_line)
-    @property
-    def last_number_before_cursor(self):
-        return self._find_last_number_in_string(self.text_till_cursor)
-    
-    @property
-    def last_entry_before_cursor(self):
-        try:
-            last_entry = self.text_till_cursor.split()[-1]
-            return last_entry
-        except IndexError:
-            return None  # Or any default value or action       
-        
-    @property
-    def is_lattice_line(self):
-        """ This method checks if the current line is a lattice line.
-            There are two possible options to check if the current line is a lattice line:
-            1. If the keyword 'fill' is present in the current line and the selection start position is after the 'fill' keyword, the line is considered a lattice line.
-            2. If the current line is a continuation line (starts with four spaces)  the text from the previous line(s) is prepended to the current line until a non-continuation line is encountered. If the resulting text contains the keyword 'fill', the line is considered a lattice line.
-        """
-        self.logger.debug("Called method is_lattice_line")
-        
-        if "fill" in self.current_line:
-            fill_index = self.current_line.find("fill")
-            if self.cursor_column > fill_index:
-                return True
-        # checking if there is keyword fill earlier
-        if "fill" in self.full_mcnp_input_line:
-                return True
-
-        return False
-    
     def _get_line_without_comment(self, current_line_no):
         """
         Returns the current line without the comment part.
@@ -141,7 +201,7 @@ class ModelOfLine(object):
             current_line = current_line.split("$", 1)[0]
         return current_line.rstrip()
     @property
-    def full_mcnp_input_line(self):
+    def full_entry(self):
         # if current line or next line is continuation line then return full line
         if  self.is_current_line_continuation_line or self.is_continuation_line(self.current_line_no+1):
             return self._merge_continuation_lines()
@@ -195,36 +255,3 @@ class ModelOfLine(object):
                 break
         # Join all parts and strip any '&' at the end
         return ' '.join(full_line_parts).strip("&")
-
-
-
-
-    def find_space_separated_token_end_positions(self, token_index, pattern=r'\S+'):
-        """
-        Finds the position immediately after the first character of a specified space-separated token in a string.
-
-        This method identifies positions in the string where a space separates characters based on the provided pattern.
-
-        Parameters:
-        - token_index (int): The index of the token for which to find the end position, where indexing starts at 0.
-        - pattern (str): The regular expression pattern to identify tokens. Default is r'\S+'. we locate space separated tokens and find where it ends in the line
-
-        Returns:
-        - int: The position immediately after the first character of the specified space-separated token.
-        """
-        matches = list(re.finditer(pattern, self.current_line))
-        if token_index < len(matches):
-            match = matches[token_index]
-            return match.end()
-        return None
-    @property
-    def is_cursor_at_material(self):
-        """
-        Determine if the cursor is at a material definition 
-        only usable within a cell block.
-
-        Returns:
-            bool: True if the cursor is at a material definition, False otherwise.
-        """
-        # strip line into list, if there is only two elements in the list then it is likely we are adding a material
-        return len(self.text_till_cursor_list) == 2 

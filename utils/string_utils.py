@@ -1,5 +1,4 @@
 import re
-import logging
 
 
 def get_block_type_from_line(logger, full_mcnp_input_line):
@@ -37,7 +36,9 @@ def get_block_type_from_line(logger, full_mcnp_input_line):
     
     # If no patterns match, default to 'undefined'
     return None
-
+def is_comment_selected(model_of_line):
+     return
+     
 def is_comment_line(line):
     """
     Checks if a line starts with a comment.
@@ -85,3 +86,22 @@ def extract_keyword_value(line, keyword):
         """
         match = re.search(r'{}\s*=\s*(\S+)'.format(keyword), line)
         return match.group(1) if match else None
+
+def remove_comments(line):
+        """
+        Removes comments (denoted by '$') from a line.
+
+        :param line: The input line as a string.
+        :return: The line with comments removed.
+        """
+        if line is None:
+            return None
+        line, comment = line.split("$", 1)
+        return line.rstrip(), comment
+
+    # Helper method for regular expressions (example)
+def return_last_number_in_string(string):
+        try:
+            return re.findall(r'\d+', string)[-1]
+        except IndexError:
+            return None 
