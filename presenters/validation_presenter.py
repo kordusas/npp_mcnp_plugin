@@ -1,6 +1,10 @@
-
-from npp_mcnp_plugin.models.error import  ErrorCollection, ErrorModel
 import logging
+try:
+    from npp_mcnp_plugin.models.error import  ErrorModel
+except ImportError:
+    from models.error import  ErrorModel
+
+
 
 def validate_mcnp_model(mcnp_input, mcnp_error_collection, validator):
     """
