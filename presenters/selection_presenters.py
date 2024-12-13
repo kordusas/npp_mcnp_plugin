@@ -140,49 +140,11 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
     def __init__(self, model_of_current_line, mcnp_input, notifier):
         super(SurfaceBlockPresenter, self).__init__(model_of_current_line, mcnp_input, notifier)
 
-    @property
-    def is_selection_a_surface_type(self):
-        """
-        Check if the selected text represents a surface type.
-
-        This method checks if the selected text contains any non-digit characters. If it does, it is considered
-        a surface type. Otherwise, it is not.
-
-        Returns:
-            bool: True if the selected text is a surface type, False otherwise.
-        """
-        selected_text = self.selected_card_service.first_entry_in_selection
-        return all(not text.isdigit() and text != "+" and text !="-" for text in selected_text)
-
-    @property
-    def is_selection_a_transformation(self):
-        """
-        Check if the selected line represents a transformation.
-
-        it's not a transformation if:
-             - line is a continuation line then 
-             - there are non-digit characters before the cursor
-        If the second entry in the line is a digit, and it matches the first selected entry, it's a transformation.
-
-        Returns:
-            bool: True if the selected line is a transformation, False otherwise.
-        """
-        self.logger.debug( "Called method is_selection_a_transformation")
-        if self.selected_card_service.is_current_line_continuation_line:
-            return False
-        elif self.selected_card_service.has_non_digit_chars_before_cursor:
-            return False
-
-        second_entry = self.selected_card_service.current_line_list[1]
-        if second_entry.isdigit():
-            first_selected_entry = self.selected_card_service.first_entry_in_selection
-            return first_selected_entry == second_entry
-        return False
     def _handle_surface_type_selected(self):
         """
         Handle the selected surface type.
         """
-        surface_type = self.selected_card_service.first_entry_in_selection
+        surface_type = self.selected_card_service.get_surface_type() 
         self.logger.debug("Surface type selected: {}".format(surface_type))
 
         # Try to find the surface type in surface_info first, then in physics_and_macrobodies_info
@@ -200,9 +162,8 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
         """
         Handle the selected transformation.
         """
-        transformation_id = self.selected_card_service.first_entry_in_selection.lstrip("0")
-        transformation_id = validate_return_id_as_int(transformation_id)
-
+        
+        transformation_id = self.selected_card_service.get_transformation_id()
         # here should go a logic to return the transformation instance which could be then printed by notifier for now just create transformation instance
         transformation_instance = self.mcnp_input.get_transformation(transformation_id)
         message = format_notifier_message(transformation_instance)
@@ -215,10 +176,10 @@ class SurfaceBlockPresenter(AbstractBlockSelectionPresenter):
         call notifier to pop the message
         """
         self.logger.debug( "Analyzing surface block selection")
-        if self.is_selection_a_surface_type:
+        if self.selected_card_service.selection_is_a_surface_type():
             return self._handle_surface_type_selected()
 
-        elif self.is_selection_a_transformation:
+        elif self.selected_card_service.selection_is_a_transformation():
             return self._handle_transformation_selected()
 
         return None
