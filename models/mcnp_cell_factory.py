@@ -3,7 +3,7 @@ import re
 try: 
     from npp_mcnp_plugin.utils.general_utils import validate_return_id_as_int
     from npp_mcnp_plugin.utils.string_utils import extract_keyword_value
-    from npp_mcnp_plugin.models.mcnp_input_cards import  Cell
+    from mcnp_input_cards import  Cell
 except ImportError:
     from utils.general_utils import validate_return_id_as_int
     from utils.string_utils import extract_keyword_value
