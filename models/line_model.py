@@ -1,7 +1,10 @@
 
 from Npp import editor
 import logging, re
-from npp_mcnp_plugin.utils.string_utils import is_comment_line, remove_comments, return_last_number_in_string
+try:
+    from npp_mcnp_plugin.utils.string_utils import is_comment_line, remove_comments, return_last_number_in_string
+except ImportError:
+    from utils.string_utils import is_comment_line, remove_comments, return_last_number_in_string
 
 class ModelOfLine(object):
     """
@@ -123,21 +126,6 @@ class ModelOfLine(object):
             return match.end()
         return None
 
-class BaseLineHelper(object):
-    """
-    Abstract base class for line helpers in Python 2.7.
-    Provides common methods for analyzing lines and handling continuation logic.
-    """
-    __metaclass__ = ABCMeta
-
-    def __init__(self, model_of_line):
-        """
-        Initializes the helper with a ModelOfLine instance.
-
-        :param model_of_line: An instance of ModelOfLine representing the current line.
-        """
-        self.model_of_line = model_of_line
-
     def is_continuation_line(self, line_no):
         """
         Determines if a specific line is a continuation line.
@@ -145,11 +133,11 @@ class BaseLineHelper(object):
         :param line_no: The line number to check.
         :return: True if the line is a continuation line, False otherwise.
         """
-        current_line, _ = remove_comments(self.model_of_line.get_line(line_no))
+        current_line, _ = remove_comments(self.get_line(line_no))
         if current_line and current_line.startswith("    "):
             return True
 
-        previous_line = remove_comments(self.model_of_line.get_line(line_no - 1))
+        previous_line = remove_comments(self.get_line(line_no - 1))
         return bool(previous_line and previous_line.endswith("&"))
 
     def is_current_line_continuation_line(self):
@@ -158,7 +146,7 @@ class BaseLineHelper(object):
 
         :return: True if the current line is a continuation line, False otherwise.
         """
-        return self.is_continuation_line(self.model_of_line.current_line_no)
+        return self.is_continuation_line(self.current_line_no)
     @property
     def is_cursor_at_material(self):
         """
@@ -202,12 +190,36 @@ class BaseLineHelper(object):
         return current_line.rstrip()
     @property
     def full_entry(self):
+
         # if current line or next line is continuation line then return full line
         if  self.is_current_line_continuation_line or self.is_continuation_line(self.current_line_no+1):
-            return self._merge_continuation_lines()
+            line_no_of_card_start = self._start_line_no_of_mcnp_card()
+            return self._merge_continuation_lines(line_no_of_card_start)
         return self.current_line 
+    @property
+    def entry_until_selection(self):
+        return self.full_entry
 
-    def _merge_continuation_lines(self):
+    def _start_line_no_of_mcnp_card(self):
+        current_line_no = self.current_line_no
+        
+        # Move backwards to find the start of the card (non-continuation and non-comment line)
+        while current_line_no >= 0:
+            current_line = self._get_line_without_comment(current_line_no).lstrip()
+
+            # If it's not a continuation or a comment, we've found the start of the card
+            if self._is_this_line_start_of_mcnp_card(current_line_no, current_line):
+                self.logger.debug("Card start found, line no %s", current_line_no)
+                break
+            # Move to the previous line
+            current_line_no -= 1        
+        return current_line_no
+    
+    
+    def _is_this_line_start_of_mcnp_card(self, line_no, content):
+        return not self.is_continuation_line(line_no) and not is_comment_line(content)
+    
+    def _merge_continuation_lines(self, start_line_number):
         """
         Merges continuation lines into a single complete input card by finding the 
         start of the card and collecting all continuation lines up to the current line.
@@ -219,22 +231,8 @@ class BaseLineHelper(object):
             str: The merged full input card as a single string.
         """
         full_line_parts = []
-        current_line_no = self.current_line_no
-        is_new_card_start = lambda line_no, content: (
-        not self.is_continuation_line(line_no) and not is_comment_line(content)
-    )
-        
-        # Move backwards to find the start of the card (non-continuation and non-comment line)
-        while current_line_no >= 0:
-            current_line = self._get_line_without_comment(current_line_no).lstrip()
-
-            # If it's not a continuation or a comment, we've found the start of the card
-            if is_new_card_start(current_line_no, current_line):
-                self.logger.debug("Card start found, line no %s", current_line_no)
-                break
-            # Move to the previous line
-            current_line_no -= 1
-
+        current_line_no = start_line_number
+        current_line = self.get_line(current_line_no)
         # Continue processing as long as the next line is a continuation line or a comment line
         while True:
 
@@ -251,7 +249,7 @@ class BaseLineHelper(object):
                 self.logger.warning("Couldn't find end of mcnp input card")
                 break
 
-            if is_new_card_start(current_line_no, current_line):
+            if self._is_this_line_start_of_mcnp_card(current_line_no, current_line):
                 break
         # Join all parts and strip any '&' at the end
         return ' '.join(full_line_parts).strip("&")
