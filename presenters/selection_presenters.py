@@ -123,6 +123,7 @@ class CellBlockPresenter(AbstractBlockSelectionPresenter):
         elif self.selected_card_service.is_cell_id_selected():
             return self._handle_cell_id_selected()        
 
+        self.logger.debug("Selection did not match any conditions, returning None")
         return None
 
 
