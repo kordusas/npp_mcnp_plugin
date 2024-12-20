@@ -27,6 +27,13 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 3. place the npp_mcnp_plugin directory in the ../plugins/PythonScript/lib folder
 4. place the main.py file in the ../plugins/PythonScript/scripts
 
+
+## Usage
+
+After installation, the plugin can be accessed via the `plugins -> PythonScript -> scripts` menu in Notepad++.
+
+One can set up the shortcuts to the script following the advise in the discussion: <https://community.notepad-plus-plus.org/topic/14703/run-python-script-pythonscript-plugin-with-a-shortcut/3>
+
 ## Features
 
 ### General
@@ -85,7 +92,7 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
 
 ### MCNP Error Checking
 
-- **Status**: Partially Implemented
+- **Status**: Completed
 - **Description**: Pops a message after parsing the MCNP input and checking if
   - tally particle identifiers are valid
   - +f6 tally doesnt have a particle identifier
@@ -95,13 +102,6 @@ NPP_MCNP_Plugin is an extension for Notepad++ designed to enhance the productivi
   - transformation parameters are missing
   - cell entries(surface or #cell) are not integers
   - cell surface entries exist
-
-
-## Usage
-
-After installation, the plugin can be accessed via the `plugins -> PythonScript -> scripts` menu in Notepad++.
-
-One can set up the shortcuts to the script following the advise in the discussion: <https://community.notepad-plus-plus.org/topic/14703/run-python-script-pythonscript-plugin-with-a-shortcut/3>
 
 ## Examples
 
