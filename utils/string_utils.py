@@ -15,11 +15,14 @@ def get_block_type_from_line(logger, full_mcnp_input_line):
     # Define regex patterns for each block type
     patterns = {
         'surfaces': [
-            r'^\d+\s+\d+\s+[a-zA-Z]+\s+\d+',  # First 'surfaces' pattern
-            r'^\d+\s+(?!like\b)[a-zA-Z]+\s+\d+',         # Second 'surfaces' pattern
+            r'^\d+\s+\d+\s+[a-zA-Z]+\s+[-]?\d+',  # First 'surfaces' pattern
+            r'^\d+\s+(?!like\b)[a-zA-Z]+\s+[-]?\d+',         # Second 'surfaces' pattern
+            r'^\d+\s+\d+\s+[a-zA-Z]+\s+[-]?.',  # First 'surfaces' pattern
+            r'^\d+\s+(?!like\b)[a-zA-Z]+\s+[-]?.',         # Second 'surfaces' pattern            
         ],
         'cells': [
             r'^\d+\s+\d+\s+[-]?\d[\S+]?.*\s+\S+',           # 'cells' pattern
+            r'^\d+\s+0\s+[\S+]?.*\s+\S+', # 'cells' 0 pattern
             r'^\d+\s+like\s+\d+\s+but',                     
         ],
         "physics": [
