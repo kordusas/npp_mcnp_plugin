@@ -104,12 +104,13 @@ class CellFactory:
         return universe, volume
 
     
-def parse_surfaces_and_cells(trimmed_line):
+def parse_surfaces_and_cells(trimmed_line, separators=r"[-:()]" ):
         """
         Parses surfaces and cell exclusions from the trimmed line.
 
         Args:
             trimmed_line: The input line containing surface and cell information.
+            separators (str): The characters to split the line by.
 
         Returns:
             A tuple containing:
@@ -119,7 +120,9 @@ def parse_surfaces_and_cells(trimmed_line):
         """
         surfaces = []
         cells = []
-        all_entries = re.sub(r"[-:()]", " ", trimmed_line).split()
+
+        # replacing possible separators with space
+        all_entries = re.sub(separators, " ", trimmed_line).split()
         for entry in all_entries:
                 entry = entry.lstrip("0")  # Remove leading zeros
                 if "#" in entry:
