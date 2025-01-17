@@ -183,16 +183,30 @@ class EditorHandler:
                 # Print the selected item along with its type and info
                 self.logger.info("Type of selection: {}, selected text: {} ".format(metadata, selected_text))
 
+import time
+
 if __name__ == "__main__":
     configure_logging(enable_logging=True)
-
+    
+    # Record the start time
+    start_time = time.time()
+    
+    # Initialize objects
     selection_notifier = SelectionNotification()
     error_view = ErrorView()
     autocomplete_notifier = AutocompleteNotification()
-
+    
     # Setting autocomplete separator as a new line character
     editor.autoCSetSeparator(ord("\n"))
-
+    
     # Renamed the handler for consistency and clarity
     editor_handler = EditorHandler(selection_notifier, error_view, autocomplete_notifier)
     editor_handler.register_callbacks()
+    
+    # Record the end time
+    end_time = time.time()
+    
+    # Calculate and print the elapsed time
+    elapsed_time = end_time - start_time
+    editor_handler.logger.info("Initialization took {:.4e} seconds".format(elapsed_time))
+
