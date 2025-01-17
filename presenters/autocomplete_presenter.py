@@ -2,6 +2,7 @@
 from abc import ABCMeta, abstractmethod
 from npp_mcnp_plugin.utils.string_utils import return_list_entries_starting_with_string
 from npp_mcnp_plugin.utils.general_utils import format_notifier_message
+from npp_mcnp_plugin.services.utils import is_column_at_cell_definition
 
 import logging
 import re
@@ -59,17 +60,6 @@ class CellBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
         super(CellBlockAutoCompletePresenter, self).__init__(model_of_current_line, mcnp_input, notifier)  
 
 
-    def _autocoplete_ids(self, first_digits, my_list_of_ids):
-        """
-        This function provides autocomplete suggestions for  ids based on the first digits entered and list provided.
-        
-         Args:
-            first_digits (str): The first part of the cell id.
-        """
- 
-        possible_cell_list = return_list_entries_starting_with_string(my_list_of_ids, first_digits)
-        return possible_cell_list
-
     def provide_autocomplete_suggestions(self):
         new_entry = self.model_of_current_line.last_entry_before_cursor
         new_entry_digits = re.sub(r'[^0-9]', '', new_entry)
@@ -78,11 +68,16 @@ class CellBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
         message = None
         self.logger.info("Entry added: %s", new_entry)
 
-        if  re.match(r"trcl=\d+", new_entry):
+        # Define regex patterns with optional negative sign
+        trcl_pattern = r"trcl=-?\d+"
+        hash_pattern = r"#-?\d+"
+        number_pattern = r"-?\d+$"
+
+        if  re.match(trcl_pattern, new_entry):
             message = self._autocoplete_ids(first_digits=new_entry_digits, my_list_of_ids=self.mcnp_input.transformations.keys())
             mytype = "translation"
 
-        elif re.match(r"#\d+", new_entry):
+        elif re.match(hash_pattern, new_entry):
             message = self._autocoplete_ids(first_digits=new_entry_digits,my_list_of_ids=self.mcnp_input.cells.keys())
             mytype = "cell"
 
@@ -90,7 +85,7 @@ class CellBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
              message = self._autocoplete_ids(first_digits=new_entry_digits,my_list_of_ids=self.mcnp_input.materials.keys())
              mytype = "material"
 
-        elif new_entry.isdigit() and self.is_cursor_at_cell_definition():
+        elif re.match(number_pattern, new_entry) and self.is_cursor_at_cell_definition():
              message = self._autocoplete_ids(first_digits=new_entry_digits,my_list_of_ids=self.mcnp_input.surfaces.keys())
              mytype = "surface"
 
