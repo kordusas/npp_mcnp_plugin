@@ -1,6 +1,6 @@
 from Npp import notepad, editor, console, SCINTILLANOTIFICATION, UPDATE, NOTIFICATION
 import logging
-
+import re
 from npp_mcnp_plugin.utils.file_parser import FileParser
 from npp_mcnp_plugin.views.autocoplete_view import  AutocompleteNotification
 from npp_mcnp_plugin.views.selection_view import  SelectionNotification
@@ -13,7 +13,7 @@ from npp_mcnp_plugin.utils.general_utils import configure_logging, get_char_from
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_string_empty
 from npp_mcnp_plugin.utils.input_validator import InputValidator
 
-from npp_mcnp_plugin.presenters.presenter_utils import BlockPreseterFactory, BlockAutoCompletePresenterFactory
+from npp_mcnp_plugin.presenters.presenter_factories import BlockPreseterFactory, BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
 from npp_mcnp_plugin.utils.string_utils import get_block_type_from_line
 CHAR_PERIOD = "."
@@ -148,29 +148,23 @@ class EditorHandler:
     def on_character_added(self, args):
             char_added = get_char_from_args(args)
             model_of_current_line = ModelOfLine.from_notepad()
-                
-            if (char_added.isdigit() or char_added == "#") and not is_comment_line(model_of_current_line.current_line):
-                self.logger.info("None space character added ")
-                self.handle_character(model_of_current_line)
-    def handle_character(self, model_of_current_line): 
- 
-        self.logger.info("char added in non comment line")
 
-        block_type = block_type = get_block_type_from_line(self.logger, model_of_current_line.full_entry.strip())
-        self.logger.info("Block type is: %s", block_type)
-        if not block_type:
-            return 
-                
-        
+            block_type = get_block_type_from_line(self.logger, model_of_current_line.full_entry.strip())
+            self.logger.info("Block type is: %s", block_type)
+            if not block_type:
+                block_type = self.mcnp_input.return_block_type(model_of_current_line.current_line_no)
+                self.logger.info("Using Backup, Block type is: %s", block_type)
+            
+            # Delegate handling to the Presenter Factory, including editor reference and genai_service
+            autocomplete_presenter = BlockAutoCompletePresenterFactory(
+                block_type=block_type, 
+                character_added=char_added, 
+                model_of_mcnp_card=model_of_current_line, 
+                mcnp_input=self.mcnp_input, 
+                notifier=self.autocomplete_notifier,
+            )
+            self.autocompletion_data = autocomplete_presenter.pop_suggestions() 
 
-        # *** Create and use the Autocomplete Presenter ***
-        autocomplete_presenter = BlockAutoCompletePresenterFactory(
-            block_type, 
-            model_of_mcnp_card=model_of_current_line, 
-            mcnp_input=self.mcnp_input, 
-            notifier=self.autocomplete_notifier
-        )
-        self.autocompletion_data = autocomplete_presenter.pop_suggestions() 
         
     def on_autocompletion_selection(self, selection):
         """
