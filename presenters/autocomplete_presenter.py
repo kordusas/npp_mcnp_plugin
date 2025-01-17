@@ -22,7 +22,17 @@ class AbstractBlockAutoCompletePresenter(object):
         self.mcnp_input = mcnp_input
         self.notifier = notifier
         self.logger = logging.getLogger(self.__class__.__name__)
-
+    def _autocoplete_ids(self, first_digits, my_list_of_ids):
+        """
+        This function provides autocomplete suggestions for ids based on the first digits entered and list provided.
+        
+         Args:
+            first_digits (str): The first part of the cell id.
+        """
+ 
+        possible_cell_list = return_list_entries_starting_with_string(my_list_of_ids, first_digits)
+        return possible_cell_list
+    
     def pop_suggestions(self):
         result = self.provide_autocomplete_suggestions()
         if result.get("value"):

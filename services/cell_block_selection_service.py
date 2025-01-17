@@ -1,6 +1,7 @@
 from npp_mcnp_plugin.services.selection_investigation_service import SelectionInvestigationService
 from npp_mcnp_plugin.utils.general_utils import validate_return_id_as_int
 from npp_mcnp_plugin.models.mcnp_cell_factory import parse_surfaces_and_cells
+from utils import is_column_at_cell_definition
 import re
 
 class CellSelectionService(SelectionInvestigationService):
@@ -40,6 +41,7 @@ class CellSelectionService(SelectionInvestigationService):
         cell_id = self.selected_mcnp_card.first_entry_in_selection
 
         return validate_return_id_as_int(cell_id)
+        
     def is_cell_definition_selected(self):
         """
         Check if the cursor or selection column is at the start of a cell definition.
@@ -47,25 +49,7 @@ class CellSelectionService(SelectionInvestigationService):
         Returns:
             bool: True if the cursor or selection column is at the start of a cell definition, False otherwise.
         """
-        cursor_or_selection_column = self.selected_mcnp_card.selection_start
-        # Get second entry in the line which is material id
-        material_id = validate_return_id_as_int(self.selected_mcnp_card.current_line_list[1])
-
-        # If material is not void then cell definition starts after third entry (index is 0 based)
-        index_of_token = 2
-        # If material is void then cell definition starts after second entry (index is 0 based)
-        if material_id == 0:
-            index_of_token = 1 
-        
-        cell_definition_start = self.selected_mcnp_card.find_space_separated_token_end_position(index_of_token)
-        if cursor_or_selection_column < cell_definition_start:
-            return False
-        
-        # If cursor is after letters (imp, vol etc.) we are past the cell definition
-        if bool(re.search(r'[a-zA-Z]', self.selected_mcnp_card.text_till_cursor)):
-            return False
-
-        return True
+        return is_column_at_cell_definition(self.selected_mcnp_card,self.selected_mcnp_card.selection_start )
 
     def is_cell_like_but_format(self):
         """
