@@ -39,7 +39,7 @@ def BlockAutoCompletePresenterFactory(block_type, character_added, model_of_mcnp
     Returns:
         AbstractBlockAutoCompletePresenter: An instance of a presenter or None.
     """
-    if character_added == '\n':
+    if character_added == '\n' and (block_type == "cells"):
         return AutocompleteNewCellLinePresenter(model_of_mcnp_card, mcnp_input, notifier)
     elif block_type == "surfaces":
         return SurfaceBlockAutoCompletePresenter(model_of_mcnp_card, mcnp_input, notifier)
