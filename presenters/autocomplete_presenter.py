@@ -46,6 +46,12 @@ class AbstractBlockAutoCompletePresenter(object):
         Generate and provide autocomplete suggestions.
         """
         # for not return empty dictionary
+        
+class NoOpPresenter(AbstractBlockAutoCompletePresenter):
+    def provide_autocomplete_suggestions(self):
+        self.logger.info("NoOpPresenter: Unsupported block type encountered. No suggestions provided.")
+        return {}
+
 
 class SurfaceBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
     def __init__(self, model_of_current_line, mcnp_input, notifier):
