@@ -1,6 +1,5 @@
 from Npp import notepad, editor, console, SCINTILLANOTIFICATION, UPDATE, NOTIFICATION
-import logging
-import re
+import logging, time, re
 from npp_mcnp_plugin.utils.file_parser import FileParser
 from npp_mcnp_plugin.views.autocoplete_view import  AutocompleteNotification
 from npp_mcnp_plugin.views.selection_view import  SelectionNotification
@@ -9,7 +8,7 @@ from npp_mcnp_plugin.views.error_view   import  ErrorView
 from npp_mcnp_plugin.models.line_model import ModelOfLine
 from npp_mcnp_plugin.models.error import  ErrorCollection
 from npp_mcnp_plugin.models.mcnp_input  import ModelMcnpInput   
-from npp_mcnp_plugin.utils.general_utils import configure_logging, get_char_from_args
+from npp_mcnp_plugin.utils.general_utils import configure_logging, get_char_from_args, validate_return_id_as_int
 from npp_mcnp_plugin.utils.string_utils import is_comment_line, is_string_empty
 from npp_mcnp_plugin.utils.input_validator import InputValidator
 
@@ -181,9 +180,13 @@ class EditorHandler:
 
             if metadata=="material" or metadata=="surface":
                 # Print the selected item along with its type and info
-                self.logger.info("Type of selection: {}, selected text: {} ".format(metadata, selected_text))
+                # get the selected item from the mcnp_input and pass to the selection_notifier to notify
+                selected_item = self.mcnp_input.get_item_by_name(metadata, validate_return_id_as_int(selected_text))
+                self.logger.info("Selected {} ".format(selected_item))
+                #analysis_result = {"value" : selected_item}
+                #self.selection_notifier.notify(analysis_result)
 
-import time
+
 
 if __name__ == "__main__":
     configure_logging(enable_logging=True)
