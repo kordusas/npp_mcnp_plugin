@@ -75,6 +75,22 @@ class ModelMcnpInput(object):
         if physics is not None:
             self.physics = physics
 
+    def get_item_by_name(self, item_type, item_name):
+        """
+        This function returns the item with the given name and type.
+        """
+        
+        if item_type == "surface":
+            return self.surfaces.get(item_name)
+        elif item_type == "cell":
+            return self.cells.get(item_name)
+        elif item_type == "material":
+            return self.materials.get(item_name)
+        elif item_type == "tally":
+            return self.tallies.get(item_name)
+        else:
+            return None
+
     @classmethod
     def from_file_parser(cls, file_parser):
         """
@@ -97,7 +113,6 @@ class ModelMcnpInput(object):
         """
         This function returns the surface with the given number.
         """
-        # return the surface using get method, set default to None
         return self.surfaces.get(surface_id, "Surface {}: The Machine god doesn't recognize this surface".format(surface_id))
         
     def get_cell(self, cell_id):
@@ -109,21 +124,21 @@ class ModelMcnpInput(object):
     def get_material(self, material_id):
         """ 
         This function returns the material with the given number.
-        must return a material instance or string
         """
-        return  self.materials.get(material_id, "Material {}: The Machine god doesn't recognize this material".format(material_id))
+        return self.materials.get(material_id, "Material {}: The Machine god doesn't recognize this material".format(material_id))
 
-    
     def get_tally(self, tally_id):
         """
         This function returns the tally with the given number.
         """
-        return  self.tallies.get(tally_id, "tally {}: The Machine god doesn't recognize this material".format(tally_id))
+        return self.tallies.get(tally_id, "Tally {}: The Machine god doesn't recognize this tally".format(tally_id))
+
     def get_transformation(self, transformation_id):
         """
-        This function returns the transformation with the given number. currently  a placeholder
+        This function returns the transformation with the given number.
         """
         return self.transformations.get(transformation_id, "Transformation {}: The Machine god doesn't recognize this transformation".format(transformation_id))
+
     def return_block_type(self, line_number):
         """
         This function returns the type of block the line is in.
