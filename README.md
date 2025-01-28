@@ -61,10 +61,9 @@ One can set up the shortcuts to the script following the advise in the discussio
   - **In Cell Block**:
     - Suggest autocomplete surface ID during typing from the available surface dictionary. (completed)
     - suggest autocoplete the cell name after "#\d+". (completed)
-    - Suggest a new cell ID after a newline in the cell block.
+    - Suggest a new cell ID after a newline in the cell block (completed).
     - Suggest a material ID after one digit is typed;(completed)
     - Suggest available transformations after typing "trcl=\d+".  (completed)
-    - add popup for the selections to provide basic information about the card
   - **In Surface Block**:
     - Suggest a new surface ID after a newline.
     - Auto-popup to show available transformations when typed "\tr".
@@ -76,8 +75,8 @@ One can set up the shortcuts to the script following the advise in the discussio
 - **Status**: Completed
 - **Description**: For cell blocks,
 - selecting a specific cell displays a list of other cells where that cell is used, facilitating a deeper understanding of cell interactions within the model.
-- Selecting the material popups info about the material.
-- selecting surfaces popups information about the selected surfaces.
+- Selecting the material displays info about the material.
+- selecting surfaces displays information about the selected surfaces.
 
 ### Surfaces Block Information
 
@@ -100,7 +99,7 @@ One can set up the shortcuts to the script following the advise in the discussio
 - **Status**: Completed
 - **Description**: Pops a message after parsing the MCNP input and checking if
   - tally particle identifiers are valid
-  - +f6 tally doesnt have a particle identifier
+  - +f6 tally has a particle identifier
   - tally parameters (cells or surfaces) are missing
   - tally is missing
   - surface type is invalid
