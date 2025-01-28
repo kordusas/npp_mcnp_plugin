@@ -1,7 +1,6 @@
 from npp_mcnp_plugin.models.mcnp_input_cards import Surface, Cell, Material, Transformation, Tally, Isotope
 from npp_mcnp_plugin.utils.general_utils import initialise_json_data, find_by_key_and_prefix
-from Npp import notepad
-import os, json
+import os, json, logging
 
 
 class InputValidator(object):
@@ -13,6 +12,7 @@ class InputValidator(object):
         self.surface_info = initialise_json_data('surface_info.json')
         self.particle_designators_info = initialise_json_data('particle_designators_info.json')
         self.physics_and_macrobodies_info = initialise_json_data("mcnp.tmSnippets.json")
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def validate_cell(self, cell, existing_surface_ids):
         """
@@ -59,14 +59,17 @@ class InputValidator(object):
         if not isinstance(tally, Tally):
             return "TALLY_INVALID_OBJECT", "Invalid tally object. Expected a Tally object."       
 
+        self.logger.debug("Checking if its heating tally")
         if tally.collision_heating_enabled is False:
-            error = self._validate_tally_particles(tally)
-            if error:
-                return error
+            error_code, error_message = self._validate_tally_particles(tally)
+            if error_code or error_message:
+                return error_code, error_message
         elif tally.particles is not None:
             return "TALLY_COLLISION_HEATING_PARTICLE_CONFLICT", "Tally id {} collision heating enabled but particles present.".format(tally.id)
         
+        self.logger.debug("Checking if there are any tally entries")
         if tally.entries is None:
+            self.logger.debug("entries missing")
             return "TALLY_MISSING_ENTRIES", "Tally id {} is missing cells/surfaces.".format(tally.id)
 
         return None, None
