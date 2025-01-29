@@ -178,6 +178,7 @@ class ModelOfLine(object):
        
         previous_line = self._get_line_without_comment(line_number - 1)
         return previous_line.endswith('&')
+    
     def _get_line_without_comment(self, current_line_no):
         """
         Returns the current line without the comment part.
@@ -185,9 +186,8 @@ class ModelOfLine(object):
         - cant strip left side for leading spaces as this may mark a continuation line.
         """
         current_line = editor.getLine(current_line_no).lower()
-        if "$" in current_line:
-            current_line = current_line.split("$", 1)[0]
-        return current_line.rstrip()
+        current_line_no_comment, __ = remove_comments(current_line)
+        return current_line_no_comment
     @property
     def full_entry(self):
 
@@ -196,6 +196,7 @@ class ModelOfLine(object):
             line_no_of_card_start = self._start_line_no_of_mcnp_card()
             return self._merge_continuation_lines(line_no_of_card_start)
         return self.current_line 
+    
     @property
     def entry_until_selection(self):
         return self.full_entry
