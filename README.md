@@ -117,6 +117,10 @@ The error checking happens every time you save a file and pops a separate window
 
 ![](docs/images/error_message_popup_example.gif)
 
+Example of Cell Block autocoplete (suggestions for autocoplete cell ID, surface ID, material ID) feutures and cell ID selection.
+
+![](docs/images/autocomplete_feutures_example.gif)
+
 
 ## Attributed Files
 
