@@ -49,7 +49,7 @@ class AbstractBlockAutoCompletePresenter(object):
         
 class NoOpPresenter(AbstractBlockAutoCompletePresenter):
     def provide_autocomplete_suggestions(self):
-        self.logger.info("NoOpPresenter: Unsupported block type encountered. No suggestions provided.")
+        self.logger.info("NoOpPresenter: Unsupported block type or irrelevant entry encountered. No suggestions provided.")
         return {}
 
 
@@ -68,7 +68,7 @@ class CellBlockAutoCompletePresenter(AbstractBlockAutoCompletePresenter):
 
     def provide_autocomplete_suggestions(self):
         new_entry = self.model_of_current_line.last_entry_before_cursor
-        new_entry_digits = re.sub(r'[^0-9]', '', new_entry)
+        new_entry_digits = re.sub(r'[^0-9]', '', new_entry) if isinstance(new_entry, str) else '' # in case itss new line and ther eis no entry
         entry_length = len(new_entry_digits)
         mytype=None
         message = None
