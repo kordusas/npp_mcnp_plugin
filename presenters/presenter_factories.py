@@ -5,6 +5,10 @@ from autocomplete_presenter_genai import AutocompleteNewCellLinePresenter
 from npp_mcnp_plugin.services.cell_block_selection_service import CellSelectionService
 from npp_mcnp_plugin.services.surface_block_selection_service import SurfaceSelectionService
 from npp_mcnp_plugin.services.physics_block_selection_service import PhysicsSelectionService
+try:
+    from npp_mcnp_plugin.utils.string_utils import is_comment_line
+except ImportError:
+    from utils.string_utils import is_comment_line
 
 def BlockPreseterFactory(block_type,  model_of_mcnp_card, mcnp_input, notifier):
     """
@@ -37,9 +41,26 @@ def BlockAutoCompletePresenterFactory(block_type, character_added, model_of_mcnp
         notifier (Notifier): For displaying messages/suggestions.
 
     Returns:
-        AbstractBlockAutoCompletePresenter: An instance of a presenter or None.
+        AbstractBlockAutoCompletePresenter: An instance of a presenter or NoOpPresenter if no suitable presenter is found.
+
+    The function returns a NoOpPresenter in the following cases:
+        - The character added is not a digit, letter, or newline.
+        - The current line is a comment line.
+        - The character added is a newline and the block type is 'surfaces' or 'physics'.
+
+    Specific presenters are returned based on the block type and character added:
+        - AutocompleteNewCellLinePresenter: When a newline is added and the block type is 'cells'.
+        - SurfaceBlockAutoCompletePresenter: When the block type is 'surfaces'.
+        - CellBlockAutoCompletePresenter: When the block type is 'cells'.
+        - PhysicsBlockAutoCompletePresenter: When the block type is 'physics'.
     """
-    if character_added == '\n' and (block_type == "cells"):
+    # NoOpPresenter that does nothing
+    if not (character_added.isdigit() or character_added.isalpha() or character_added == '\n') or is_comment_line(model_of_mcnp_card.current_line):
+        return NoOpPresenter(model_of_mcnp_card, mcnp_input, notifier)
+    # NoOpPresenter that does nothing, can implement in the future
+    elif character_added == '\n' and (block_type == "surfaces" or block_type == "physics"):
+        return NoOpPresenter(model_of_mcnp_card, mcnp_input, notifier)    
+    elif character_added == '\n' and (block_type == "cells"):
         return AutocompleteNewCellLinePresenter(model_of_mcnp_card, mcnp_input, notifier)
     elif block_type == "surfaces":
         return SurfaceBlockAutoCompletePresenter(model_of_mcnp_card, mcnp_input, notifier)
@@ -47,11 +68,11 @@ def BlockAutoCompletePresenterFactory(block_type, character_added, model_of_mcnp
         return CellBlockAutoCompletePresenter(model_of_mcnp_card, mcnp_input, notifier)
     elif block_type == "physics":
         return PhysicsBlockAutoCompletePresenter(model_of_mcnp_card, mcnp_input, notifier)  
-    else:
-        logging.error("Unknown block type: %s", block_type)
-        return NoOpPresenter(notifier)  # Define a NoOpPresenter that does nothing
+    
+    logging.error("Unknown block type: %s", block_type)
+    return NoOpPresenter(model_of_mcnp_card, mcnp_input, notifier)  # NoOpPresenter that does nothing
 
 
 
-        
+
 
