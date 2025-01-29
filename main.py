@@ -15,8 +15,7 @@ from npp_mcnp_plugin.utils.input_validator import InputValidator
 from npp_mcnp_plugin.presenters.presenter_factories import BlockPreseterFactory, BlockAutoCompletePresenterFactory
 from npp_mcnp_plugin.presenters.validation_presenter import validate_mcnp_model
 from npp_mcnp_plugin.utils.string_utils import get_block_type_from_line
-CHAR_PERIOD = "."
-CHAR_SPACE = " "
+
 FILE_TYPES_TO_IGNORE = [
     # Documentation and text files
     ".txt",    # Plain text files
@@ -146,10 +145,11 @@ class EditorHandler:
         
     def on_character_added(self, args):
             char_added = get_char_from_args(args)
+            
             model_of_current_line = ModelOfLine.from_notepad()
 
             block_type = get_block_type_from_line(self.logger, model_of_current_line.full_entry.strip())
-            self.logger.info("Block type is: %s", block_type)
+            self.logger.info("Block type is: %s, char added is: %s", block_type, char_added)
             if not block_type:
                 block_type = self.mcnp_input.return_block_type(model_of_current_line.current_line_no)
                 self.logger.info("Using Backup, Block type is: %s", block_type)
