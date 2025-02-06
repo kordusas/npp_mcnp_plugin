@@ -6,8 +6,8 @@ try:
 except ImportError:
     from utils.general_utils import validate_return_id_as_int, initialise_json_data
 
-
 natural_abundances = initialise_json_data("natural_abundances.json")
+
 class Printable(object):
     __metaclass__ = ABCMeta
 
@@ -43,38 +43,29 @@ class Tally(Printable):
         Add energy bins to the tally instance as they are often also in a separate keyword E
         """
         self.energies = energies
+
     @classmethod
     def create_from_input_line(cls, line, comment=None):
         """
-        Class method to create a Material instance from an input line.
-        Assumes :
-            the input line contains all of the information about the material. 
-            input line is all lower case and no comments are present in the line.
-        """        
-        # Assumption: line format is "f<number>:<particles> <other entries, >"
-        # Example: "f4:H,He 1 100"
-        
-        # Use re.search safely for tally_id and tally_particles
-        # Regex pattern explanation:
-        # (\+?f)    : Matches an optional '+' followed by 'f'
-        # (\d+)     : Matches one or more digits (the tally number)
-        # \:?        : Matches an optional colon
-        # (\S+)?    : Matches one or more non-whitespace characters (optional, the particles)
-        # (.*)      : Matches the rest of the line (the entries)
+        Class method to create a Tally instance from an input line.
+        """
         match = re.search(r'(\+?f)(\d+)\:?(\S+)?(.*)', line.lower())
-        
+        return cls.create_from_match(match, comment)
+
+    @classmethod
+    def create_from_match(cls, match, comment=None):
+        """
+        Class method to create a Tally instance from a regex match object.
+        """
         if not match:
             return None
-        if "+" in match.group(1):
-            collision_heating_enabled = True
-        else:
-            collision_heating_enabled = False
-
+        collision_heating_enabled = "+" in match.group(1)
         tally_id = validate_return_id_as_int(match.group(2))
         tally_particles = match.group(3).split(",") if match.group(3) else None
         tally_entries = match.group(4).split() if match.group(4) else None
         
         return cls(tally_id=tally_id, particles=tally_particles, entries=tally_entries, comment=comment, collision_heating_enabled=collision_heating_enabled)
+
 class Transformation(Printable):
     def __init__(self, transformation_id, parameters, comment=None):
         assert isinstance(transformation_id, int), "transformation_id must be an int"
@@ -85,27 +76,32 @@ class Transformation(Printable):
         return "Transformation %s: %s" % (self.id, self.parameters)
     def print_output(self):
         return "Not Implemented"
+
     @classmethod
     def create_from_input_line(cls, line, comment=None):
         """
-        creates transformation instance from the line
-        In future may need improvement if we want to initialise the transformation with different parameters:
-        cosine or angles
+        Class method to create a Transformation instance from an input line.
         """
         match = re.search(r'\*?tr(\d+)(.*)', line)
+        return cls.create_from_match(match, comment)
+
+    @classmethod
+    def create_from_match(cls, match, comment=None):
+        """
+        Class method to create a Transformation instance from a regex match object.
+        """
+        if not match:
+            return None
         id = validate_return_id_as_int(match.group(1))
         parameters = match.group(2)
-        # if * in line then this is angles and not cosines
-        if "*" in line[0:2]:
-             comment += " Angles transformation "
+        if "*" in match.group(0)[0:2]:
+            comment += " Angles transformation "
         return cls(id, parameters, comment)
-    
-# class Surface is a Printable object class that has the following attributes:    
-class Surface(Printable):
 
+class Surface(Printable):
     def __init__(self, surface_id, surface_type, parameters, comment, transformation=None):
         assert isinstance(surface_id, int), "surface_id must be an int"
-        self.id = surface_id # int
+        self.id = surface_id
         self.surface_type = surface_type
         self.transformation = transformation
         self.parameters = parameters
@@ -127,19 +123,23 @@ class Surface(Printable):
         if not self.transformation:
             return "%s %s %s" % (self.id, self.surface_type, self.parameters)
         return "%s %s %s %s" % (self.id, self.transformation, self.surface_type, self.parameters)
+
     @classmethod
     def create_from_input_line(cls, line, comment=None):
         """
-        Parses a single surface line and returns a `Surface` object.
-
-        Args:
-            line (str): The line to parse.
-            comment (str): The comment associated with the surface.
-
-        Returns:
-            surface (Surface): The parsed `Surface` object.
+        Class method to create a Surface instance from an input line.
         """
-        surface_data = line.split()
+        match = re.search(r'^\d+(.*)', line)
+        return cls.create_from_match(match, comment)
+
+    @classmethod
+    def create_from_match(cls, match, comment=None):
+        """
+        Class method to create a Surface instance from a regex match object.
+        """
+        if not match:
+            return None
+        surface_data = match.group(0).split()
         if len(surface_data) < 1:
             raise ValueError("Surface ID is missing")
 
@@ -256,7 +256,17 @@ class Material(Printable):
 
     @classmethod
     def create_from_input_line(cls, line, comment=None):
+        """
+        Class method to create a Material instance from an input line.
+        """
         match = re.search(r'm(\d+)(.*)', line)
+        return cls.create_from_match(match, comment)
+
+    @classmethod
+    def create_from_match(cls, match, comment=None):
+        """
+        Class method to create a Material instance from a regex match object.
+        """
         if not match:
             raise ValueError("Invalid material line format")
         material_id = int(match.group(1))
@@ -266,26 +276,39 @@ class Material(Printable):
         if len(parameters) % 2 != 0:
             raise SyntaxError("Uneven number of material entries")
 
-        # Delegate creation of isotopes to IsotopeFactory
         factory = IsotopeFactory()
         for i in range(0, len(parameters), 2):
             isotope = factory.create_isotope_from_input(parameters[i], parameters[i + 1])
             material_instance.add_isotope(isotope)
 
         return material_instance
+
     def print_output(self):
-            if self.density is not None:
-                return "%s %s" % (self.id, -self.density)
-            else:
-                return "%s %s" % (self.id, self.atomic_density)
-            return
+        if self.density is not None:
+            return "%s %s" % (self.id, -self.density)
+        else:
+            return "%s %s" % (self.id, self.atomic_density)
+        return
 
 class Cell(object):
     """
     Represents a Cell with material, surfaces, excluded cells, and other attributes.
     """
 
-    def __init__(self, cell_id, material_id, density, surfaces=None, cells=None, importance=None, universe=None, volume=None):
+    def __init__(self, cell_id, material_id, density, surfaces=None, cells=None, importance=None, data_cards=None, ext=None):
+        """Initialize Cell object with required parameters.
+    
+        Args:
+            cell_id (int): Unique cell identifier
+            material_id (int): Material identifier (0 for void)
+            density (float): Material density (-ve for g/cm3, +ve for atoms/barn-cm)
+            surfaces (list, optional): List of surface identifiers
+            cells (list, optional): List of cell identifiers
+            importance (dict, optional): Dictionary of importance values
+            data_cards (dict, optional): Dictionary of data card values
+            ext (dict, optional): Dictionary of extension values
+        """
+        # Type validation
         assert isinstance(cell_id, int), "cell_id must be an int"
         assert isinstance(material_id, int), "material_id must be an int"
         assert isinstance(density, (int, float)), "density must be numeric"
