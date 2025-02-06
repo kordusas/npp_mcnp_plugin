@@ -14,74 +14,99 @@ class CellFactory:
     Factory for creating and parsing Cell instances.
     """
     logger = logging.getLogger(__name__)
+    cell_keywords = [
+            r'\*?trcl', r'\*?fill', 'tmp', 'u', 'lat',
+            'imp:.', 'vol', 'pwt', 'ext:.', 'fcl', 'wwn', 'dxc', 'nonu', 'pd',
+            'elpt', 'cosy', 'bflcl', 'unc', 
+        ]
+    any_keyword = '|'.join(['(?:{})'.format(k) for k in cell_keywords])
+    
+    
     @staticmethod
     def create_from_input_line(line, comment=None):
         """
         Parses an input line and creates a Cell instance.
         """
-                            
-        cell_definition_text = CellFactory.split_line(line)
-        CellFactory.logger.debug("Cell definition: %s ", cell_definition_text)
-
-
-                             
-
-        # It extracts the following information:
-        #   match.group(1) - cell_id: A unique numerical identifier for the cell.
-        #   match.group(2) - mat number: The material number associated with the cell.
-        #   match.group(3) - cell definition: A string containing the cell's properties 
-        #                      (e.g., density, geometry).
-        match = re.search(r'(\d+)\s+(\d+)\s+(\S+.*)?', cell_definition_text)
-
-        # if cell is like but definition
-        if "like" in cell_definition_text and "but" in cell_definition_text:
-            return  Cell(validate_return_id_as_int( match.group(1), 0))
-                             
+        pattern = re.compile(r'(\d+)\s+(\d+)\s+(\S+.*)?')
+        match = pattern.search(line)
         if not match:
             CellFactory.logger.error("Input line format is invalid: %s", line)
             raise ValueError("Input line format is invalid")
+        return CellFactory.create_from_match(match, comment)
 
-        cell_id = validate_return_id_as_int( match.group(1))
+    @staticmethod
+    def create_from_match(match, comment=None):
+        """
+        Creates a Cell instance from a regex match object.
+
+        Args:
+            match (re.Match): The regex match object containing cell information.
+            comment (str, optional): An optional comment associated with the cell.
+
+        Returns:
+            Cell: A Cell instance created from the parsed information.
+        """
+        cell_id = validate_return_id_as_int(match.group(1))
         material_id = validate_return_id_as_int(match.group(2))
-        
-        # extracts the density and returns trimmed line containing only the cell definition
-        trimmed_line, density = CellFactory._extract_density(match.group(3), material_id)
+        cell_definition, keyword_dict = CellFactory.extract_keywords(match.group(3))
 
+        if "like" in cell_definition and "but" in cell_definition:
+            return Cell(cell_id, 0)
+        
+        trimmed_line, density = CellFactory._extract_density(cell_definition, material_id)
+
+        CellFactory.logger.debug("Cell definition: %s ", trimmed_line)
         surfaces, cells = parse_surfaces_and_cells(trimmed_line)
 
-        universe, volume = CellFactory._parse_universe_and_volume(line)
+        data_cards = {k: v for k, v in keyword_dict.items() if 'imp' not in k and 'ext' not in k}
+        data_cards["u"] = validate_return_id_as_int(data_cards.get("u"))
+        data_cards["vol"] = CellFactory._validate_volume(data_cards.get("vol", None))
 
-        # Placeholder for importance dictionary; can be extended as needed
-        importance = {}  
-        return Cell(cell_id, material_id, density, surfaces, cells, importance, universe, volume)
+        ext = CellFactory._reformat_dict_for_data_card_with_particle_designator(keyword_dict, 'ext')
+        importance = CellFactory._reformat_dict_for_data_card_with_particle_designator(keyword_dict, 'imp')
+
+        return Cell(cell_id, material_id, density, surfaces, cells, importance, data_cards, ext )
 
     @staticmethod
-    def _extract_importance(string):
-        return None
-    @staticmethod
-    def split_line(line):
+    def extract_keywords(line):
         """
-        Iteratively removes portions of the input line that start with the keywords 
-        "vol", "imp", "u", "lat", "fill" and returns only the text before encountering these keywords.
+        Extracts keywords and their values from the input line using regular expressions.
 
         Args:
             line (str): The input line to process.
 
         Returns:
-            str: The remaining portion of the line after removing parts with the specified keywords.
+            tuple: A tuple containing the trimmed line and a dictionary of keyword values.
         """
-        trimmed_line = line
-        params = ['imp', 'vol', 'pwt', 'ext', 'fcl', 'wwn', 'dxc', 'nonu', 'pd', 'tmp', 'u', 'trcl', 'lat', 'fill', 'elpt', 'cosy', 'bflcl']
+        pattern = re.compile(r'((?:{}))\s*=?\s*(.*?)(?={}|\Z)'.format(CellFactory.any_keyword, CellFactory.any_keyword), re.VERBOSE)
+        keyword_values =  {key: value.strip() for key, value in pattern.findall(line)}
+        
+        # Find the lowest index of any keyword in the line
+        lowest_index = len(line)
+        for key in keyword_values:
+            match = re.search(re.escape(key), line)
+            if match:
+                lowest_index = min(lowest_index, match.start())
 
-        while any(param in trimmed_line for param in params):
-            for param in params:
-                # Find the param in the line
-                param_index = trimmed_line.find(param)
-                if param_index != -1:
-                    # Retain only the part before the param
-                    trimmed_line = trimmed_line[:param_index].strip()
-                    break  # Restart the loop after removing the param
-        return trimmed_line
+        trimmed_line = line[:lowest_index].strip()
+
+        return trimmed_line, keyword_values
+    @staticmethod
+    def _reformat_dict_for_data_card_with_particle_designator(keyword_dictionary, key):
+        """
+        Reformat a dictionary to include a particle designator in the key.
+
+        Args:
+            dict (dict): The dictionary to reformat.
+            key (str): The particle designator to append to each key.
+
+        Returns:
+            dict: The reformatted dictionary.
+        """
+        result_dict = {k.strip(key).strip(":"): validate_return_id_as_int(v) for k, v in keyword_dictionary.items() if key  in k }
+
+        return result_dict
+    
     @staticmethod
     def _extract_density(line, material_id):
         if material_id != 0:
@@ -91,19 +116,28 @@ class CellFactory:
             return trimmed_line, density
         
         return line, 0
-
-    @staticmethod
-    def _parse_universe_and_volume(line):
-        """Extracts the universe and volume values if present."""
-        universe = extract_keyword_value(line, 'u')
-        universe = validate_return_id_as_int(universe) if universe else None
-
-        volume = extract_keyword_value(line, 'vol')
-        volume = float(volume) if volume else None
-
-        return universe, volume
-
     
+    @staticmethod
+    def _validate_volume(volume):
+        """
+        Validates that the volume is a number. Raises a ValueError if not.
+
+        Args:
+            volume (str): The volume value to validate.
+
+        Returns:
+            float: The validated volume as a float.
+
+        Raises:
+            ValueError: If the volume is not a valid number.
+        """
+        if volume is None:
+            return None
+        try:
+            return float(volume)
+        except (TypeError, ValueError):
+            raise ValueError("Invalid volume value: {}".format(volume))
+
 def parse_surfaces_and_cells(trimmed_line, separators=r"[-:()]" ):
         """
         Parses surfaces and cell exclusions from the trimmed line.
@@ -121,14 +155,13 @@ def parse_surfaces_and_cells(trimmed_line, separators=r"[-:()]" ):
         surfaces = []
         cells = []
 
-        # replacing possible separators with space
         all_entries = re.sub(separators, " ", trimmed_line).split()
         for entry in all_entries:
-                entry = entry.lstrip("0")  # Remove leading zeros
+                entry = entry.lstrip("0")
                 if "#" in entry:
                     cells.append(validate_return_id_as_int(entry.strip("#")))
                 else:
                     surfaces.append(validate_return_id_as_int(entry))
         return surfaces, cells
 
-        
+

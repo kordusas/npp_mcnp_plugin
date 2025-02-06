@@ -87,11 +87,13 @@ class FileParser(object):
         the comment_line is then appended to the previous line.
 
         If accidenally the line is empty we skip it.
-        """
+
+        Adds space in front of the "(" to make sure that parsing always works; special case where after density cell can start with "(" without space  
+                  """
         merged_block = []
         comment = ""
         for  line in block:
-            
+            line = line.replace('(', ' (')
             line = line.rstrip('\n')
             if line.strip() == "":
                 continue
@@ -142,74 +144,70 @@ class FileParser(object):
     def _parse_block(self, block, regex_pattern, create_instance_func):
         """
         Generic method to parse a block of lines based on a regex pattern and create instances using a provided function.
-        Captures instance errors and passes them to the error collector
+        Captures instance errors and passes them to the error collector.
 
         Args:
             regex_pattern (str): The regex pattern to match lines.
-            create_instance_func (function): The function to create an instance from a line and comment.
+            create_instance_func (function): The function to create an instance from a match object and comment.
 
         Returns:
             dict: A dictionary of parsed instances indexed by their ID.
         """
         parsed_items = {}
         comment = ""
+        pattern = re.compile(regex_pattern)
         try:
             for line in block:
-                if is_match_at_start(line, regex_pattern=regex_pattern):
-
-                    # returns instance and error message if any during the instance creation
-                    instance = create_instance_func(line, comment)
-                    
+                match = pattern.match(line)
+                if match:
+                    instance = create_instance_func(match, comment)
                     if instance:
                         self.logger.debug("Created instance: %s", instance)
                         parsed_items[instance.id] = instance
                     comment = ""
-
                 elif is_comment_line(line):
                     comment += " " + re.sub(' +', ' ', line.lstrip("c"))
                 else:
                     comment = ""
-                    
         except Exception as e:
-                # Catch any exception, log it, and add it to the error collection
-                error_message = "Error while processing line '{}': {}".format(line, e)
-                self.logger.error(error_message)
-                self.error_collection.add_error(
-                    ErrorModel(line, e, "INVALID_DATA")
-                )
+            error_message = "Error while processing line '{}': {}".format(line, e)
+            self.logger.error(error_message)
+            self.error_collection.add_error(
+                ErrorModel(line, e, "INVALID_DATA")
+            )
         return parsed_items
 
     def get_transformations(self):
         self.logger.debug("Parsing transformations")
         return self._parse_block(self.block["physics"],
-            regex_pattern="\*?tr\d",
-            create_instance_func=Transformation.create_from_input_line
+            regex_pattern=r"\*?tr\d",
+            create_instance_func=Transformation.create_from_match
         )
 
     def get_materials(self):
         self.logger.debug("Parsing materials")
         return self._parse_block(self.block["physics"],
-            regex_pattern='m(\d+)(.*)',
-            create_instance_func=Material.create_from_input_line,
+            regex_pattern=r'm(\d+)(.*)',
+            create_instance_func=Material.create_from_match,
         )
 
     def get_tallies(self):
         self.logger.debug("Parsing tallies")
         return self._parse_block(self.block["physics"],
-            regex_pattern='^(\+?f)(\d+)\:?',
-            create_instance_func=Tally.create_from_input_line,
+            regex_pattern=r'^(\+?f)(\d+)\:?(\S+)?(.*)',
+            create_instance_func=Tally.create_from_match,
         )
     def get_surfaces(self):
         self.logger.debug("Parsing surfaces")
         return self._parse_block(self.block["surfaces"],
-            regex_pattern='^\d+',
-            create_instance_func=Surface.create_from_input_line,
+            regex_pattern=r'^\d+(.*)',
+            create_instance_func=Surface.create_from_match,
         )
     def get_cells(self):
         self.logger.debug("Parsing cells")
         return self._parse_block(self.block["cells"],
-            regex_pattern='(\d+)\s+(\d+)\s+(\S+)\s+(.*)',
-            create_instance_func=CellFactory.create_from_input_line,
+            regex_pattern=r'(\d+)\s+(\d+)\s+(.*)',
+            create_instance_func=CellFactory.create_from_match,
         )    
     def get_physics(self):
         information_dict = {}
@@ -281,6 +279,6 @@ class FileParser(object):
         instance.logger.info("FileParser created from file: %s", file_path)  
 
         return instance
- 
-        
+
+
 

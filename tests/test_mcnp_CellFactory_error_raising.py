@@ -1,14 +1,18 @@
 import pytest
-from npp_mcnp_plugin.models.mcnp_input_cards import CellFactory
+try:
+    from npp_mcnp_plugin.models.mcnp_cell_factory import CellFactory
+except ImportError as e:
+    from models.mcnp_cell_factory import CellFactory
+    print(e)
 
 # Test data for invalid input cases
 invalid_test_data = [
     ("999 a 0 -404:405:408           imp:n=0", "Input line format is invalid"), 
     ("999a  0 -404:405:408           imp:n=0", "Input line format is invalid"),
     ("999  r0 -404:405:408           imp:n=0", "Input line format is invalid"),
-    ("999  0 -404 405 408w           imp:n=0", "Cell entry is not a valid integer: 408w"),
+    ("999  0 -404 405 408w           imp:n=0", "Invalid value '408w' provided. Expected an integer."),
     ("x  r0 -404:405:408           imp:n=0", "Input line format is invalid"),
-    ("99  0 -404:405:408         vol= x  imp:n=0", "could not convert string to float: x"),
+    ("99  0 -404:405:408         vol= x  imp:n=0", "Invalid volume value: x"),
      ("10  0 -404:405:408         u= x  imp:n=0", "Invalid value 'x' provided. Expected an integer.")
 ]
 

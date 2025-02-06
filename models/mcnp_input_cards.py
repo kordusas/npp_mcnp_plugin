@@ -287,31 +287,39 @@ class Cell(object):
 
     def __init__(self, cell_id, material_id, density, surfaces=None, cells=None, importance=None, universe=None, volume=None):
         assert isinstance(cell_id, int), "cell_id must be an int"
-        assert isinstance(material_id, int), "material_id must be an int of material identifier"
-        assert isinstance(surfaces, list), "surfaces must be a list of surface identifiers"
-        assert isinstance(cells, list), "cells must be a list of cell identifiers"
-        assert isinstance(importance, dict) or importance is None, "importance must be a dict or None"
-        assert isinstance(universe, (int, type(None))), "universe must be an int or None"
-        assert isinstance(volume, (float, type(None))), "volume must be a float or None"
+        assert isinstance(material_id, int), "material_id must be an int"
+        assert isinstance(density, (int, float)), "density must be numeric"
+        assert surfaces is None or isinstance(surfaces, list), "surfaces must be a list"
+        assert cells is None or isinstance(cells, list), "cells must be a list"
+        assert importance is None or isinstance(importance, dict), "importance must be a dict"
+        assert data_cards is None or isinstance(data_cards, dict), "data_cards must be a dict"
+        assert ext is None or isinstance(ext, dict), "ext must be a dict"
         
+        # Assign values
         self.id = cell_id
         self.material_id = material_id
-        self.surfaces = surfaces if surfaces else []
-        self.cells = cells if cells else []
-        self.importance = importance or {}
-        self.universe = universe
-        self.volume = volume
-        self.density = density
+        self.density = float(density)  # Convert to float
+        self.surfaces = surfaces if surfaces is not None else []
+        self.cells = cells if cells is not None else []
+        self.importance = importance if importance is not None else {}
+        self.ext = ext if ext is not None else {}
+        self.data_cards = data_cards if data_cards is not None else {}
 
     def __str__(self):
-        if self.universe is not None and self.volume is not None:
-            return "Cell {}: Material ID {}, Surfaces {}, Cells {}, Importance {}, Universe {}, Volume {}".format(
-                self.id, self.material_id, self.surfaces, self.cells, self.importance, self.universe, self.volume
-            )
+        parts = ["Cell {}: Material ID {}".format(self.id, self.material_id)]
         
-        return "Cell {}: Material ID {}, Surfaces {}, Cells {}, Importance {}".format(
-            self.id, self.material_id, self.surfaces, self.cells, self.importance
-        )
+        if self.surfaces:
+            parts.append("Surfaces {}".format(self.surfaces))
+        if self.cells:
+            parts.append("Cells {}".format(self.cells))
+        if self.importance:
+            parts.append("Importance {}".format(self.importance))
+        if self.ext:
+            parts.append("ext {}".format(self.ext))
+        if self.data_cards:
+            parts.append("data cards {}".format(self.data_cards))
+            
+        return ", ".join(parts)
 
     def replace_surface(self, old_surface_id, new_surface_id):
         """Replaces an existing surface ID with a new one."""
