@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 import pytest
-from npp_mcnp_plugin.models.mcnp_input_cards import Isotope, IsotopeFactory
+from npp_mcnp_plugin.models.mcnp_input_cards import IsotopeFactory
 
 # Consolidated test data: (input_value, method, expected_zaid, expected_name, expected_z, expected_a, expected_abundance, expected_library)
 test_data = [
