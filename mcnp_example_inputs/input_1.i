@@ -89,6 +89,13 @@ M81 1001    -0.01       $ Hydrogen
     12024   -0.002      $ Magnesium
     13027   -0.034      $ Aluminum
     14028   -0.34       $ Silicon
+M82 1001    -0.01       $ Hydrogen
+    6000    -0.001      $ Carbon 
+    8016    -0.52       $ Oxygen
+    11023   -0.02       $ Sodium 
+    12024   -0.002      $ Magnesium
+    13027   -0.034      $ Aluminum
+    14028   -0.34       $ Silicon
     19039   -0.013      $ Potassiu
     20040   -0.044      $ Calcium
     26056   -0.014      $ Iron
