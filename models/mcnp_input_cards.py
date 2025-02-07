@@ -322,8 +322,8 @@ class Cell(object):
         self.id = cell_id
         self.material_id = material_id
         self.density = float(density)  # Convert to float
-        self.surfaces = surfaces if surfaces is not None else []
-        self.cells = cells if cells is not None else []
+        self.surfaces = surfaces if surfaces else []
+        self.cells = cells if cells  else []
         self.importance = importance if importance is not None else {}
         self.ext = ext if ext is not None else {}
         self.data_cards = data_cards if data_cards is not None else {}
