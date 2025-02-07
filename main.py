@@ -137,7 +137,8 @@ class EditorHandler:
         block_type = get_block_type_from_line(self.logger, model_of_current_line.full_entry.strip())
         self.logger.info("Block type is: %s", block_type)
         if not block_type:
-             return 
+             block_type = self.mcnp_input.return_block_type(model_of_current_line.current_line_no)
+             self.logger.info("Using Backup, Block type is: %s", block_type)
         
         # block presenter can analysie the 
         block_presenter = BlockPreseterFactory(block_type, model_of_mcnp_card= model_of_current_line, mcnp_input=self.mcnp_input, notifier=self.selection_notifier)
