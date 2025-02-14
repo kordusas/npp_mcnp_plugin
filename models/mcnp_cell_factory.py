@@ -80,11 +80,9 @@ class CellFactory:
         keyword_values =  {key: value.strip() for key, value in pattern.findall(line)}
         
         # Apply re.search to each keyword and filter out None values
-        matches = filter(None, map(lambda key: re.search(re.escape(key), line), keyword_values))
+        matches = map(lambda key: re.search(re.escape(key), line), keyword_values)
 
-        # Extract match positions
         match_positions = [match.start() for match in matches]
-
         # Get the minimum start position or default to len(line) if no match is found
         lowest_index = min(match_positions) if match_positions else len(line)
 
