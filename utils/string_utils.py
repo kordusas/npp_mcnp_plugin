@@ -1,5 +1,5 @@
 import re
-
+from itertools import ifilter
 
 def get_block_type_from_line(logger, full_mcnp_input_line):
     """
@@ -72,9 +72,12 @@ def return_list_entries_starting_with_string(my_list, string):
         string (str): The string to match at the start of each entry.
 
     Returns:
-        list: A list of entries that start with the specified string.
+        list: A list of strings that start with the specified string.
     """
-    return [str(key) for key in my_list if str(key).startswith(string)]
+    
+    map_result = map(str, my_list) # convert all elements to strings
+
+    return list(ifilter(lambda key: key.startswith(string), map_result))
 
 def extract_keyword_value(line, keyword):
         """
