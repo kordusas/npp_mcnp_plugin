@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 import pytest
-from npp_mcnp_plugin.models.mcnp_input_cards import Surface
+from npp_mcnp_plugin.models.mcnp_input_cards import Tally
 
 # Define test cases as tuples of input lines and expected attributes
 test_data = [
@@ -11,7 +11,7 @@ test_data = [
 @pytest.mark.parametrize("line, expected_attributes", test_data)
 def test_surface_creation(line, expected_attributes):
     # Create the surface using the factory method
-    surface = Surface.create_from_input_line(line, expected_attributes.get("comment"))
+    surface = Tally.create_from_input_line(line, expected_attributes.get("comment"))
     
     # Assert each attribute matches expected values
     for attr_name, expected_value in expected_attributes.items():
