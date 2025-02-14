@@ -2,11 +2,9 @@ import logging
 import re
 try: 
     from npp_mcnp_plugin.utils.general_utils import validate_return_id_as_int
-    from npp_mcnp_plugin.utils.string_utils import extract_keyword_value
     from mcnp_input_cards import  Cell
 except ImportError:
     from utils.general_utils import validate_return_id_as_int
-    from utils.string_utils import extract_keyword_value
     from models.mcnp_input_cards import  Cell
 
 class CellFactory:
@@ -81,12 +79,14 @@ class CellFactory:
         pattern = re.compile(r'((?:{}))\s*=?\s*(.*?)(?={}|\Z)'.format(CellFactory.any_keyword, CellFactory.any_keyword), re.VERBOSE)
         keyword_values =  {key: value.strip() for key, value in pattern.findall(line)}
         
-        # Find the lowest index of any keyword in the line
-        lowest_index = len(line)
-        for key in keyword_values:
-            match = re.search(re.escape(key), line)
-            if match:
-                lowest_index = min(lowest_index, match.start())
+        # Apply re.search to each keyword and filter out None values
+        matches = filter(None, map(lambda key: re.search(re.escape(key), line), keyword_values))
+
+        # Extract match positions
+        match_positions = [match.start() for match in matches]
+
+        # Get the minimum start position or default to len(line) if no match is found
+        lowest_index = min(match_positions) if match_positions else len(line)
 
         trimmed_line = line[:lowest_index].strip()
 
@@ -109,6 +109,11 @@ class CellFactory:
     
     @staticmethod
     def _extract_density(line, material_id):
+        """
+        Extracts the density from the input line. and returns the trimmed line without density.
+        Return:
+            tuple: A tuple containing the trimmed line and the density value.
+        """
         if material_id != 0:
             parts = line.split()
             density = float(parts[0])
