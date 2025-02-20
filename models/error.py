@@ -18,10 +18,14 @@ class ErrorCollection(object):
         self.errors = None
 
     def add_error(self, error):
-        if self.errors is None:
-            self.errors = [error]
-        else:
-            self.errors.append(error)
+        """
+        Add an error to the collection if it is not None.
+        """
+        if error:
+            if self.errors is None:
+                self.errors = [error]
+            else:
+                self.errors.append(error)
 
     def get_all_errors(self):
         return self.errors
