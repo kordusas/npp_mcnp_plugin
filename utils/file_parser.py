@@ -149,7 +149,7 @@ class FileParser(object):
     def format_sanitize_blocks(self):
         for key in self.block.keys():
             # Turn continuation lines into single line
-            self.block[key] = re.sub('&.*\n', ' ', self.block[key])
+            self.block[key] = re.sub(' &.*\n', ' ', self.block[key])
             self.block[key] = re.sub('\n {5}', ' ', self.block[key])
 
             
