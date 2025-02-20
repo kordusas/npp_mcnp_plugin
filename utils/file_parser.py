@@ -104,8 +104,21 @@ class FileParser(object):
                 # parse nps
                 information_dict['nps'] = int(float(line.split()[1]))
         return information_dict
+    def check_for_tabulation_character_in_content(self):
+        """
+        Check if the tabulation character in the content is a tab or spaces.
+        return: ErrorModel if tabulation character is present, None otherwise
+        """
+        if '\t' in self.content:
+            # find line using regex
+            pattern = re.compile(r'\n(.*?\t.*?\n)')
+            match = pattern.search(self.content)
+            return ErrorModel(match.group(1), "Tabulation character present", "INVALID_CHARACTER")
+        return None
 
     def analyse_file(self):
+        self.error_collection.add_error(self.check_for_tabulation_character_in_content())
+            
         self.format_sanitize_content()
         self.split_blocks()
         self.format_sanitize_blocks()
